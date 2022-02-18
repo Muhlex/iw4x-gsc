@@ -1,0 +1,9 @@
+.vscode
+
+demos/
+logs/
+images/
+**/*.iwd
+
+bots.txt
+missingasset.csv
