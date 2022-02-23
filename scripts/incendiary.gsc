@@ -93,7 +93,11 @@ spawnFire(position, radius, duration, damage, owner, killCamEnt)
 		point delete();
 	}
 
-	if (origins.size < 1) return;
+	if (origins.size < 1)
+	{
+		if (isDefined(killCamEnt)) killCamEnt delete();
+		return;
+	}
 
 	fire = spawn("script_origin", origins[0]);
 	fire.owner = owner;
@@ -113,7 +117,6 @@ spawnFire(position, radius, duration, damage, owner, killCamEnt)
 		trigger = spawn("trigger_radius", origin, 0, fire.flameRadius, fire.flameHeight);
 		fire.triggers[fire.triggers.size] = trigger;
 		trigger thread OnFireTriggerTouch(fire);
-		trigger thread OnFireTriggerThink(fire);
 	}
 
 	playFX(level.incendiary.effects["explosion"], origins[0] + (0, 0, 16));
@@ -127,6 +130,7 @@ spawnFire(position, radius, duration, damage, owner, killCamEnt)
 	}
 
 	if (isDefined(duration)) fire thread OnFireDurationEnd();
+	fire thread OnFireThink();
 
 	level.incendiary.fires[level.incendiary.fires.size] = fire;
 
@@ -175,8 +179,18 @@ OnPlayerConnect()
 OnPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc, psOffsetTime)
 {
 	// Prevent stun effect from being applied (and anything else a stun grenade does to players).
-	if (isDefined(eInflictor.isIncendiary) && eInflictor.isIncendiary && sMeansOfDeath != "MOD_IMPACT")
-		return;
+	if (isDefined(eInflictor.isIncendiary) && eInflictor.isIncendiary)
+	{
+		if (sMeansOfDeath != "MOD_IMPACT")
+			return;
+		else
+		{
+			// Disable the stun effect for direct hits but reward direct hits with some regular shellshock.
+			// (Yes, the game applies it on direct hits as well, which is most likely not intended...)
+			sWeapon = "nuke_mp";
+			self shellShock("frag_grenade_mp", 1.0);
+		}
+	}
 
 	self [[level.incendiary.origFuncs.callbackPlayerDamage]](eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc, psOffsetTime);
 }
@@ -316,7 +330,7 @@ OnIncendiaryExplode(owner, killCamEnt)
 {
 	self waittill("explode", position);
 
-	self thread deleteProjectileVisuals();
+	self deleteProjectileVisuals();
 	killCamEnt unlink();
 	spawnFire(
 		position,
@@ -335,6 +349,49 @@ OnFireDurationEnd()
 	wait self.duration;
 
 	self deleteFire();
+}
+
+OnFireThink()
+{
+	self endon("death");
+
+	for (;;)
+	{
+		foreach (ent in getDamageableEnts())
+		{
+			if (!getFirePointIntersection(self, ent.origin + (0, 0, 32)))
+				continue;
+
+			ent notify(
+				"damage",
+				80, // damage
+				self.owner, // attacker
+				vectorNormalize(ent.origin - self.origin), // direction_vec
+				self.origin, // point
+				"MOD_TRIGGER_HURT", // type
+				"", // modelName
+				"", // tagName
+				"", // partName
+				level.iDFLAGS_RADIUS | level.iDFLAGS_NO_KNOCKBACK // iDFlags
+			);
+		}
+
+		// destroy (enemy) tactical insertions
+		foreach (player in level.players)
+			if (isDefined(player.setSpawnPoint))
+				if (getFireSpawnIntersection(self, player.setSpawnPoint.origin))
+				{
+					if (self.owner != player)
+					{
+						self.owner notify("destroyed_insertion", player);
+						self.owner notify("destroyed_explosive"); // count towards SitRep Pro challenge
+						player thread maps\mp\_utility::leaderDialogOnPlayer("ti_destroyed");
+					}
+					self.owner thread maps\mp\perks\_perkfunctions::deleteTI(player.setSpawnPoint);
+				}
+
+		wait 0.5;
+	}
 }
 
 OnFireTriggerTouch(fire)
@@ -381,35 +438,6 @@ OnFireTriggerTouch(fire)
 
 		playerdata.lastTouchTime = time;
 		fire.players[player.guid] = playerdata;
-	}
-}
-
-OnFireTriggerThink(fire)
-{
-	self endon("death");
-
-	for (;;)
-	{
-		foreach (ent in getDamageableEnts())
-		{
-			if (!getPointCylinderIntersection(ent.origin + (0, 0, 32), self.origin, fire.flameRadius, fire.flameHeight))
-				continue;
-
-			ent notify(
-				"damage",
-				50, // damage
-				fire.owner, // attacker
-				vectorNormalize(ent.origin - fire.origin), // direction_vec
-				fire.origin, // point
-				"MOD_TRIGGER_HURT", // type
-				"", // modelName
-				"", // tagName
-				"", // partName
-				level.iDFLAGS_RADIUS | level.iDFLAGS_NO_KNOCKBACK // iDFlags
-			);
-		}
-
-		wait 0.5;
 	}
 }
 
@@ -685,7 +713,6 @@ getDamageableEnts()
 	ents = [];
 	ents = arrayCombine(getEntArray("grenade", "classname"), ents);
 	ents = arrayCombine(getEntArray("misc_turret", "classname"), ents);
-	ents = arrayCombine(getEntArray("ttt_destructible_item", "targetname"), ents);
 	ents = arrayCombine(getEntArray("destructible_toy", "targetname"), ents);
 	ents = arrayCombine(getEntArray("destructible_vehicle", "targetname"), ents);
 	ents = arrayCombine(getEntArray("explodable_barrel", "targetname"), ents);
