@@ -1,3 +1,5 @@
+// TODO: Handle disconnects in loading screen?
+
 /**
  * NOTE: This script requires a proxy server to transform IW4X's httpGet request into POST
  * HTTP requests that the Discord API expects. Currently IW4X cannot send POST http requests.
@@ -10,14 +12,11 @@ init()
 	setDvarIfUninitialized("sv_webhook_proxy_url", "http://127.0.0.1:28950/webhook");
 	setDvarIfUninitialized("sv_webhook_url", "");
 
-	if (!isDefined(game["webhooks__map_start_time"]))
-		game["webhooks__map_start_time"] = getSystemTime();
-
 	if (!storageHas("webhooks__guids"))
 		storageSet("webhooks__guids", "");
 
 	level thread OnPlayerConnected();
-	level thread OnGameEnded();
+	level thread OnMapLoadTimeout();
 }
 
 OnPlayerConnected()
@@ -28,7 +27,7 @@ OnPlayerConnected()
 
 		if (player entityIsBot()) continue;
 
-		player thread OnPlayerDisconnected(player);
+		player thread OnPlayerDisconnected();
 
 		guidsStr = storageGet("webhooks__guids");
 		guids = unserializeGUIDs(guidsStr);
@@ -48,31 +47,35 @@ OnPlayerDisconnected()
 
 	guidsStr = storageGet("webhooks__guids");
 	guids = unserializeGUIDs(guidsStr);
+	guidsCountOld = guids.size;
 
 	guids = arrayRemove(guids, self.guid);
 	guidsStr = serializeGUIDs(guids);
 
 	storageSet("webhooks__guids", guidsStr);
 
-	if (level.players.size == 0)
+	if (guidsCountOld > 0 && guids.size == 0)
 		sendWebhookServerEmpty();
 }
 
-OnGameEnded()
+OnMapLoadTimeout()
 {
-	level waittill("game_ended");
-
-	CONNECT_TIMEOUT = 60;
-
 	// The script engine does not run all the time and players can disconnect between map loads.
 	// Thus, clean up the known player list once no one is connecting from the last map anymore.
-	if (getSystemTime() - game["webhooks__map_start_time"] < CONNECT_TIMEOUT) return;
+	wait 60;
+
+	guidsStr = storageGet("webhooks__guids");
+	guids = unserializeGUIDs(guidsStr);
+	guidsCountOld = guids.size;
 
 	guids = [];
 	foreach (player in level.players)
 		guids[guids.size] = player.guid;
 
 	storageSet("webhooks__guids", serializeGUIDs(guids));
+
+	if (guidsCountOld > 0 && guids.size == 0)
+		sendWebhookServerEmpty();
 }
 
 serializeGUIDs(array)
