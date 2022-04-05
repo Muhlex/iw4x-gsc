@@ -1,4 +1,4 @@
-// TODO: Map voting
+// TODO: Map voting?
 
 #include scripts\_utility;
 
@@ -8,8 +8,7 @@ init()
 	setDvarIfUninitialized("sv_mapRotation_playercounts", "");
 	setDvarIfUninitialized("sv_mapRotation_timeout", 1);
 
-	// do nothing on party servers
-	if (getDvarInt("party_host"))
+	if (isPartyServer())
 		return;
 
 	res = parseRotationString(getDvar("sv_mapRotation"));
@@ -71,6 +70,11 @@ OnPlayerDisconnected()
 	self waittill("disconnect");
 
 	self OnPlayercountChange();
+
+	waittillframeend;
+
+	if (level.players.size == 0 && !mapFitsPlayercount(getDvar("mapname")))
+		exitLevel(false);
 }
 
 OnPlayercountChange()
@@ -80,9 +84,6 @@ OnPlayercountChange()
 
 	printLn("^3[nextmap]^7 Currently chosen next map does not fit playercount.");
 	setNextConfig(getRandomConfig());
-
-	if (level.players.size == 0)
-		exitLevel(false);
 }
 
 incrementWeights(weights, type, weightList)
