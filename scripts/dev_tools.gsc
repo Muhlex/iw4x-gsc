@@ -4,7 +4,7 @@ init()
 
 	if (!getDvarInt("dev_log_coords")) return;
 
-	thread OnPlayerConnected();
+	level thread OnPlayerConnected();
 }
 
 OnPlayerConnected()
