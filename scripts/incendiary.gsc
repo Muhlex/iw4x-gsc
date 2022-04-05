@@ -172,8 +172,8 @@ OnPlayerConnect()
 	self thread [[level.incendiary.origFuncs.callbackPlayerConnect]]();
 
 	self.hasIncendiary = false;
-	self thread OnPlayerGiveLoadout();
-	self thread OnPlayerGrenadeThrow();
+	self thread OnPlayerChangedKit();
+	self thread OnPlayerGrenadePullback();
 }
 
 OnPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc, psOffsetTime)
@@ -228,45 +228,57 @@ OnScavengerBagPickup()
 	player giveIncendiary();
 }
 
-OnPlayerGiveLoadout()
+OnPlayerChangedKit()
 {
 	self endon("disconnect");
 
 	for (;;)
 	{
-		self waittill("giveLoadout");
+		self waittill("changed_kit");
 
-		if (self.hasIncendiary)
-			self takeIncendiary(false);
+		self takeIncendiary(false);
 
 		if (self getReplaceOffhandWithIncendiary())
 			self giveIncendiary();
 	}
 }
 
-OnPlayerGrenadeThrow()
+OnPlayerGrenadePullback()
 {
 	self endon("disconnect");
 
 	for (;;)
 	{
-		self waittill("grenade_fire", grenade, weaponName);
+		self waittill("grenade_pullback", weaponName);
 
-		if (weaponName == "smoke_grenade_mp")
-		{
-			grenade thread OnSmokeGrenadeThink();
-			grenade thread OnSmokeExplode();
-		}
-		else if (weaponName == "concussion_grenade_mp")
-		{
-			if (!self.hasIncendiary) continue;
+		self thread OnPlayerGrenadeThrow(self.hasIncendiary);
+	}
+}
 
-			grenade.isIncendiary = true;
-			killCamEnt = grenade createKillcamEnt(); // used for flame kills only (not grenade impact kills)
-			grenade thread OnIncendiaryExplode(self, killCamEnt);
-			grenade thread createProjectileVisuals();
+OnPlayerGrenadeThrow(isIncendiary)
+{
+	self endon("disconnect");
+	self endon("death");
+	self endon("offhand_end");
+
+	self waittill("grenade_fire", grenade, weaponName);
+
+	if (weaponName == "concussion_grenade_mp")
+	{
+		if (!isIncendiary) return;
+
+		grenade.isIncendiary = true;
+		grenade notify("end_explode"); // prevents EMP effect
+		killCamEnt = grenade createKillcamEnt(); // used for flame kills only (not grenade impact kills)
+		grenade thread OnIncendiaryExplode(self, killCamEnt);
+		grenade thread createProjectileVisuals();
+		if (self getWeaponAmmoClip(weaponName) < 1)
 			self setWeaponHudIconOverride("secondaryoffhand", "none");
-		}
+	}
+	else if (weaponName == "smoke_grenade_mp")
+	{
+		grenade thread OnSmokeGrenadeThink();
+		grenade thread OnSmokeExplode();
 	}
 }
 
@@ -573,7 +585,7 @@ playFireFXGround(origin)
 
 getReplaceOffhandWithIncendiary()
 {
-	replaceOffhands = strTok(getDvar("scr_incendiary_replace_offhand"), ",");
+	replaceOffhands = strTok(getDvar("scr_incendiary_replace_offhand"), " ");
 	if (replaceOffhands.size < 1) return false;
 
 	foreach (weaponName in self getWeaponsListOffhands())
@@ -595,7 +607,7 @@ getFirePointIntersection(fire, pointPos)
 getFireSpawnIntersection(fire, spawnOrigin)
 {
 	foreach (trigger in fire.triggers)
-		if (getCylinderCylinderIntersection(spawnOrigin, 32, 64, trigger.origin, fire.flameRadius, fire.flameHeight))
+		if (getCylinderCylinderIntersection(spawnOrigin, 48, 64, trigger.origin, fire.flameRadius, fire.flameHeight))
 			return true;
 
 	return false;
