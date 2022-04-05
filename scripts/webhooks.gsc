@@ -1,5 +1,3 @@
-// TODO: Handle disconnects in loading screen?
-
 /**
  * NOTE: This script requires a proxy server to transform IW4X's httpGet request into POST
  * HTTP requests that the Discord API expects. Currently IW4X cannot send POST http requests.
@@ -10,93 +8,37 @@
 init()
 {
 	setDvarIfUninitialized("sv_webhook_proxy_url", "http://127.0.0.1:28950/webhook");
-	setDvarIfUninitialized("sv_webhook_url", "");
+	setDvarIfUninitialized("sv_webhook_urls", "");
 
-	if (!storageHas("webhooks__guids"))
-		storageSet("webhooks__guids", "");
-
-	level thread OnPlayerConnected();
-	level thread OnMapLoadTimeout();
+	level thread OnPlayerJoined();
+	level thread OnServerEmpty();
 }
 
-OnPlayerConnected()
+OnPlayerJoined()
 {
 	for (;;)
 	{
-		level waittill("connected", player);
+		level waittill("_lifecycle__joined", player);
 
-		if (player entityIsBot()) continue;
+		if (player isBot()) continue;
 
-		player thread OnPlayerDisconnected();
-
-		guidsStr = storageGet("webhooks__guids");
-		guids = unserializeGUIDs(guidsStr);
-		if (arrayContains(guids, player.guid)) continue;
-
-		if (guids.size > 0) guidsStr += ";";
-		guidsStr += player.guid;
-
-		storageSet("webhooks__guids", guidsStr);
 		sendWebhookPlayerConnect(player);
 	}
 }
 
-OnPlayerDisconnected()
+OnServerEmpty()
 {
-	self waittill("disconnect");
+	for (;;)
+	{
+		level waittill("_lifecycle__empty_ignorebots");
 
-	guidsStr = storageGet("webhooks__guids");
-	guids = unserializeGUIDs(guidsStr);
-	guidsCountOld = guids.size;
-
-	guids = arrayRemove(guids, self.guid);
-	guidsStr = serializeGUIDs(guids);
-
-	storageSet("webhooks__guids", guidsStr);
-
-	if (guidsCountOld > 0 && guids.size == 0)
 		sendWebhookServerEmpty();
-}
-
-OnMapLoadTimeout()
-{
-	// The script engine does not run all the time and players can disconnect between map loads.
-	// Thus, clean up the known player list once no one is connecting from the last map anymore.
-	wait 60;
-
-	guidsStr = storageGet("webhooks__guids");
-	guids = unserializeGUIDs(guidsStr);
-	guidsCountOld = guids.size;
-
-	guids = [];
-	foreach (player in level.players)
-		guids[guids.size] = player.guid;
-
-	storageSet("webhooks__guids", serializeGUIDs(guids));
-
-	if (guidsCountOld > 0 && guids.size == 0)
-		sendWebhookServerEmpty();
-}
-
-serializeGUIDs(array)
-{
-	str = "";
-	foreach (guid in array)
-		str += guid + ";";
-	str = getSubStr(str, 0, str.size - 1);
-
-	return str;
-}
-
-unserializeGUIDs(str)
-{
-	guids = strTok(str, ";");
-	return guids;
+	}
 }
 
 sendWebhookPlayerConnect(newPlayer)
 {
-	waittillframeend;
+	waittillframeend; // wait for player to be added to level.players
 
 	json = escapeURIString(
 "{" +
@@ -121,7 +63,7 @@ sendWebhookPlayerConnect(newPlayer)
 			"}," +
 			"\"timestamp\": \"%CURRENTTIME%\"" + // currently timestamp is put in via proxy server
 			// "\"thumbnail\": {" +
-			// 	"\"url\": \"https://gib.murl.is/static/embed.png\"" +
+			// 	"\"url\": \"https://example.com\"" +
 			// "}" +
 		"}" +
 	"]" +
@@ -132,7 +74,7 @@ sendWebhookPlayerConnect(newPlayer)
 
 sendWebhookServerEmpty()
 {
-		json = escapeURIString(
+	json = escapeURIString(
 "{" +
 	"\"embeds\": [" +
 		"{" +
@@ -153,10 +95,11 @@ sendWebhookServerEmpty()
 executeWebhook(json)
 {
 	proxyURL = getDvar("sv_webhook_proxy_url");
-	webhookURL = getDvar("sv_webhook_url");
-	if (proxyURL == "" || webhookURL == "") return;
+	webhookURLs = strTok(getDvar("sv_webhook_urls"), " ");
+	if (proxyURL == "" || webhookURLs.size == 0) return;
 
-	request = httpGet(proxyURL + "?url=" + webhookURL + "&body=" + json);
+	foreach (webhookURL in webhookURLs)
+		request = httpGet(proxyURL + "?url=" + webhookURL + "&body=" + json);
 }
 
 escapeURIString(str)
