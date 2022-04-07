@@ -118,7 +118,23 @@ arrayInsert(array, item, index)
 arrayGetRandom(array)
 {
 	keys = getArrayKeys(array); // make it work with string indices
+	if (keys.size == 0) return undefined;
 	return array[keys[randomInt(keys.size)]];
+}
+
+arraySlice(array, start, end)
+{
+	start = coalesce(start, 0);
+	end = coalesce(end, array.size);
+
+	if (start < 0) start = 0;
+	if (end > array.size) end = array.size;
+
+	result = [];
+	for (i = start; i < end; i++)
+		result[result.size] = array[i];
+
+	return result;
 }
 
 arrayCombine(array1, array2)
@@ -160,7 +176,7 @@ arrayJoin(array, delim)
 arrayFind(array, func, a1, a2, a3, a4, a5, a6, a7, a8)
 {
 	foreach (el in array)
-		if ([[func]](el, a1, a2, a3, a4, a5, a6, a7, a8))
+		if (self [[func]](el, a1, a2, a3, a4, a5, a6, a7, a8))
 			return el;
 	return undefined;
 }
@@ -170,7 +186,7 @@ arrayFilter(array, func, a1, a2, a3, a4, a5, a6, a7, a8)
 	result = [];
 
 	foreach (el in array)
-		if ([[func]](el, a1, a2, a3, a4, a5, a6, a7, a8))
+		if (self [[func]](el, a1, a2, a3, a4, a5, a6, a7, a8))
 			result[result.size] = el;
 
 	return result;
@@ -270,6 +286,14 @@ printChat(msg)
 		exec("sayraw \"" + msg + "\"");
 }
 
+respond(msg)
+{
+	if (isDedicatedServer())
+		self printChat(msg);
+	else
+		self iPrintLn(msg);
+}
+
 buildWeaponName(name, attachments)
 {
 	for (i = 0; i < 2; i++)
@@ -331,6 +355,30 @@ _buildWeaponName(baseName, attachment1, attachment2)
 		weaponName += "_" + attachment;
 
 	return ( weaponName + "_mp" );
+}
+
+getPlayerByName(name, exactMatch)
+{
+	exactMatch = coalesce(exactMatch, false);
+
+	foreach (player in level.players)
+		if (player.name == name)
+			return player;
+
+	if (exactMatch)
+		return undefined;
+
+	nameLC = toLower(name);
+
+	foreach (player in level.players)
+		if (stringStartsWith(toLower(player.name), nameLC))
+			return player;
+
+	foreach (player in level.players)
+		if (isSubStr(toLower(player.name), nameLC))
+			return player;
+
+	return undefined;
 }
 
 hudSetPos(selfAlign, parentAlign, x, y)
@@ -440,4 +488,91 @@ _hudComputeSizeRecursive(val)
 			val = child _hudComputeSizeRecursive(val);
 
 	return val;
+}
+
+text3D(pos, text, color, alpha, scale, time)
+{
+	color = coalesce(color, (1, 1, 1));
+	alpha = coalesce(alpha, 1.0);
+	scale = coalesce(scale, 1.0);
+	time = coalesce(time, 10);
+
+	for (i = 0; i < time * 20; i++)
+	{
+		print3D(pos, text, color, alpha, scale, 1);
+		wait 0.05;
+	}
+}
+
+line3D(start, end, color, time)
+{
+	color = coalesce(color, (1, 1, 1));
+	time = coalesce(time, 10);
+
+	for (i = 0; i < time * 20; i++)
+	{
+		line(start, end, color);
+		wait 0.05;
+	}
+}
+
+point3D(pos, color, time)
+{
+	thread line3D((pos[0] + 1, pos[1] + 1, pos[2] + 1), (pos[0] - 1, pos[1] - 1, pos[2] - 1), color, time);
+	thread line3D((pos[0] - 1, pos[1] + 1, pos[2] + 1), (pos[0] + 1, pos[1] - 1, pos[2] - 1), color, time);
+	thread line3D((pos[0] + 1, pos[1] - 1, pos[2] + 1), (pos[0] - 1, pos[1] + 1, pos[2] - 1), color, time);
+	line3D((pos[0] - 1, pos[1] - 1, pos[2] + 1), (pos[0] + 1, pos[1] + 1, pos[2] - 1), color, time);
+}
+
+box3D(mins, maxs, color, time)
+{
+	verts = [];
+	verts[0] = (mins[0], mins[1], mins[2]);
+	verts[1] = (maxs[0], mins[1], mins[2]);
+	verts[2] = (maxs[0], maxs[1], mins[2]);
+	verts[3] = (mins[0], maxs[1], mins[2]);
+	verts[4] = (mins[0], mins[1], maxs[2]);
+	verts[5] = (maxs[0], mins[1], maxs[2]);
+	verts[6] = (maxs[0], maxs[1], maxs[2]);
+	verts[7] = (mins[0], maxs[1], maxs[2]);
+
+	edges = [];
+
+	for (i = 0; i < 4; i++)
+	{
+		// connect vertices horizontally
+		edges[i][0] = i;
+		edges[i][1] = (i + 1) % 4;
+		edges[i + 4][0] = i + 4;
+		edges[i + 4][1] = (i + 1) % 4 + 4;
+
+		// connect vertices vertically
+		edges[i + 8][0] = i;
+		edges[i + 8][1] = i + 4;
+	}
+
+	for (i = 0; i < edges.size; i++)
+		if (i < edges.size - 1)
+			thread line3D(verts[edges[i][0]], verts[edges[i][1]], color, time);
+		else
+			line3D(verts[edges[i][0]], verts[edges[i][1]], color, time);
+}
+
+circle3D(pos, radius, color, time)
+{
+	SEGMENTS = 32;
+
+	for (i = 0; i < SEGMENTS; i++)
+	{
+		angle = i / SEGMENTS * 360;
+		nextAngle = (i + 1) / SEGMENTS * 360;
+
+		linePos = pos + (cos(angle) * radius, sin(angle) * radius, 0);
+		nextLinePos = pos + (cos(nextAngle) * radius, sin(nextAngle) * radius, 0);
+
+		if (i < SEGMENTS - 1)
+			thread line3D(linePos, nextLinePos, color, time);
+		else
+			line3D(linePos, nextLinePos, color, time);
+	}
 }
