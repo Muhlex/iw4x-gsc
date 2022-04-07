@@ -359,7 +359,11 @@ _buildWeaponName(baseName, attachment1, attachment2)
 
 getPlayerByName(name, exactMatch)
 {
+	name = coalesce(name, "");
 	exactMatch = coalesce(exactMatch, false);
+
+	if (name == "")
+		return undefined;
 
 	foreach (player in level.players)
 		if (player.name == name)

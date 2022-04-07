@@ -17,7 +17,8 @@ init()
 	registerCommand("map", scripts\commands\map::cmd, 40, "Change the current map");
 	registerCommand("give", scripts\commands\give::cmd, 50, "Give a weapon to a player");
 	registerCommand("kill", scripts\commands\kill::cmd, 50, "Kill a specified player");
-	registerCommand("spec fly", scripts\commands\tempspec::cmd, 50, "Temporary spectator mode");
+	registerCommand("freelook fly", scripts\commands\freelook::cmd, 50, "Temporary freelook spectating");
+	registerCommand("spectate spec spy", scripts\commands\spectate::cmd, 50, "Quietly spectate target");
 	registerCommand("teleport tp", scripts\commands\teleport::cmd, 50, "Teleport to players or a location");
 	registerCommand("up", scripts\commands\up::cmd, 50, "Teleport upwards");
 	registerCommand("down dn", scripts\commands\down::cmd, 50, "Teleport downwards");

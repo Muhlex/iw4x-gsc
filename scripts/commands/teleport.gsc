@@ -43,7 +43,8 @@ locationSelectTeleport()
 		return;
 	}
 
-	self scripts\commands\tempspec::unsetTempspec();
+	self scripts\commands\freelook::unsetFreelook();
+	self scripts\commands\spectate::unsetSpectate();
 
 	self beginLocationSelection("map_nuke_selector", true, level.mapSize / 16);
 	self.selectingLocation = true;

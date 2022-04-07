@@ -4,15 +4,12 @@ cmd(args, prefix)
 {
 	if (args.size < 2)
 	{
-		self respond("^1Usage: " + prefix + args[0] + " <itemname> [name]");
+		self respond("^1Usage: " + prefix + args[0] + " [name] <item>");
 		return;
 	}
 
-	itemName = args[1];
-	if (isDefined(args[2]))
-		target = getPlayerByName(args[2]);
-	else
-		target = self;
+	itemName = ternary(args.size > 2, args[2], args[1]);
+	target = ternary(args.size > 2, getPlayerByName(args[1]), self);
 
 	if (!isDefined(target))
 	{
