@@ -53,12 +53,11 @@ setSpectate(target)
 	self allowSpectateTeam("none", true);
 	self allowSpectateTeam("freelook", false);
 	self.sessionstate = "spectator";
+	self.fauxDead = true;
 	self.forcespectatorclient = target getEntityNumber();
 	self.commands.spectate.contents = self setContents(0);
 
 	self.commands.spectate.target = target;
-
-	self thread OnSpectateDeath();
 }
 
 unsetSpectate()
@@ -66,7 +65,8 @@ unsetSpectate()
 	self maps\mp\gametypes\_spectating::setSpectatePermissions();
 	if (self.sessionstate == "spectator" && self.team != "spectator")
 	{
-		self.sessionstate = "playing";
+		self.sessionstate = ternary(isAlive(self), "playing", "dead");
+		self.fauxDead = undefined;
 		self setOrigin(self.commands.spectate.prevOrigin);
 	}
 	self.forcespectatorclient = -1;
@@ -75,15 +75,6 @@ unsetSpectate()
 	self.commands.spectate.target = undefined;
 
 	self thread cleanupUnsetSpectate();
-}
-
-OnSpectateDeath()
-{
-	self endon("disconnect");
-
-	self waittill("death");
-
-	self unsetSpectate();
 }
 
 cleanupUnsetSpectate()

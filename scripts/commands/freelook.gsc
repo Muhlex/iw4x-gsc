@@ -13,7 +13,7 @@ cmd(args, prefix)
 		return;
 	}
 
-	if (!isAlive(target))
+	if (!isAlive(target) && !coalesce(target.commands.freelook.active, false))
 	{
 		self respond("^1Must be alive to enter freelook.");
 		return;
@@ -43,11 +43,10 @@ setFreelook()
 	self allowSpectateTeam("freelook", true);
 	self setOrigin(self getEye());
 	self.sessionstate = "spectator";
+	self.fauxDead = true;
 	self.commands.freelook.contents = self setContents(0);
 
 	self.commands.freelook.active = true;
-
-	self thread OnFreelookDeath();
 }
 
 unsetFreelook()
@@ -55,23 +54,15 @@ unsetFreelook()
 	self maps\mp\gametypes\_spectating::setSpectatePermissions();
 	if (self.sessionstate == "spectator" && self.team != "spectator")
 	{
-		self setOrigin(playerPhysicsTrace(self.origin, self.origin + (0, 0, -64), false, self));
-		self.sessionstate = "playing";
+		self setOrigin(playerPhysicsTrace(self.origin, self.origin - (0, 0, self getPlayerViewHeight()), false, self));
+		self.sessionstate = ternary(isAlive(self), "playing", "dead");
+		self.fauxDead = undefined;
 	}
 	self setContents(self.commands.freelook.contents);
 
 	self thread cleanupUnsetFreelook();
 
 	self.commands.freelook.active = false;
-}
-
-OnFreelookDeath()
-{
-	self endon("disconnect");
-
-	self waittill("death");
-
-	self unsetFreelook();
 }
 
 cleanupUnsetFreelook()
