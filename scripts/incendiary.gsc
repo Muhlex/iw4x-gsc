@@ -258,7 +258,6 @@ OnPlayerGrenadePullback()
 OnPlayerGrenadeThrow(isIncendiary)
 {
 	self endon("disconnect");
-	self endon("death");
 	self endon("offhand_end");
 
 	self waittill("grenade_fire", grenade, weaponName);
