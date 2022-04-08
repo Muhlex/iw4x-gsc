@@ -34,5 +34,6 @@ incendiary()
 	incendiary.iStringDesc = &"Area denial by fire.";
 	incendiary.customGive = scripts\incendiary::giveIncendiary;
 	incendiary.customTake = scripts\incendiary::takeIncendiary;
+	incendiary.customHas = scripts\incendiary::hasIncendiary;
 	return incendiary;
 }

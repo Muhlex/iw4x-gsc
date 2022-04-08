@@ -2,8 +2,6 @@
 
 init()
 {
-	setDvarIfUninitialized("scr_items_print", false);
-
 	if (!isDefined(game["_items__items"]))
 		parseItems();
 }
@@ -18,12 +16,46 @@ getItems()
 		return parseItems();
 }
 
-getItemByName(name, exactMatch)
+getItemByName(name, exactMatch, type)
 {
 	name = coalesce(name, "");
 	exactMatch = coalesce(exactMatch, false);
 
-	// ...
+	if (name == "")
+		return undefined;
+
+	items = undefined;
+
+	if (isDefined(type))
+	{
+		if (!isDefined(items[type]))
+			return undefined;
+
+		items = getItems()[type];
+	}
+	else
+	{
+		items = getItems();
+	}
+
+	result = arrayFindRecursive(items, ::itemNameIs, name);
+	if (isDefined(result))
+		return result;
+
+	if (exactMatch)
+		return undefined;
+
+	nameLC = toLower(name);
+
+	result = arrayFindRecursive(items, ::itemNameStartsWithLC, nameLC);
+	if (isDefined(result))
+		return result;
+
+	result = arrayFindRecursive(items, ::itemNameIsSubStrOfLC, nameLC);
+	if (isDefined(result))
+		return result;
+
+	return undefined;
 }
 
 createWeaponDef(weapon, attachments, camo)
@@ -44,23 +76,88 @@ createWeaponDef(weapon, attachments, camo)
 	if (isString(camo))
 		camo = items["camo"][camo];
 
-	attachmentNames = [];
-	foreach (attachment in attachments)
-		attachmentNames[attachmentNames.size] = attachment.name;
-
 	def = spawnStruct();
 	def.item = weapon;
 	def.attachments = attachments;
 	def.camo = camo;
-	def.fullName = buildWeaponName(weapon.name, attachmentNames);
+	def.fullName = buildWeaponName(weapon.name, attachments);
 
 	return def;
 }
 
-giveItem(itemOrDef)
+createWeaponDefByName(name)
+{
+	suffix = ternary(stringEndsWith(name, "_mp"), "_mp", "");
+	tokens = strTok(name, "_");
+
+	base = tokens[0] + suffix;
+	attachments = [];
+	for (i = 1; i < tokens.size; i++)
+		attachments[attachments.size] = tokens[i];
+
+	return createWeaponDef(base, attachments);
+}
+
+weaponDefAddAttachment(attachment)
+{
+	if (self.attachments.size >= 2)
+		return 2;
+
+	if (isString(attachment))
+		attachment = getItems()["attachment"][attachment];
+
+	if (!isDefined(attachment))
+		return 1;
+
+	if (!arrayContains(self.item.validAttachments, attachment))
+		return 3;
+
+	foreach (existingAtt in self.attachments)
+		if (!attachment.combosMap[existingAtt.name])
+			return existingAtt;
+
+	self.attachments[self.attachments.size] = attachment;
+	self.fullName = buildWeaponName(self.item.name, self.attachments);
+	return 0;
+}
+
+weaponDefRemoveAttachment(attachment)
+{
+	if (self.attachments.size == 0)
+		return 2;
+
+	if (isString(attachment))
+		attachment = getItems()["attachment"][attachment];
+
+	if (!isDefined(attachment))
+		return 1;
+
+	if (!arrayContains(self.attachments, attachment))
+		return 2;
+
+	self.attachments[self.attachments.size] = attachment;
+	self.attachments = arrayRemove(self.attachments, attachment);
+	self.fullName = buildWeaponName(self.item.name, self.attachments);
+	return 0;
+}
+
+weaponDefSetCamo(camo)
+{
+	if (isString(coalesce(camo, "none")))
+		camo = getItems()["camo"][camo];
+
+	if (!isDefined(camo))
+		return 1;
+
+	self.camo = camo;
+	return 0;
+}
+
+give(itemOrDef, switchTo)
 {
 	def = ternary(isDefined(itemOrDef.item), itemOrDef, undefined);
 	item = coalesce(itemOrDef.item, itemOrDef);
+	switchTo = coalesce(switchTo, false);
 
 	if (isDefined(item.customGive))
 	{
@@ -70,13 +167,16 @@ giveItem(itemOrDef)
 
 	if (!isDefined(item.type)) return;
 
+	weaponName = coalesce(def.fullName, item.name);
+	if (item.name == "specialty_tacticalinsertion")
+		weaponName = "flare_mp";
+
 	switch (item.type) {
 		case "weapon":
-			fullName = coalesce(def.fullName, item.name);
-			self maps\mp\_utility::_giveWeapon(fullName, def.camo.id);
+			self maps\mp\_utility::_giveWeapon(weaponName, def.camo.id);
 
 			if (self hasPerk("specialty_extraammo", true) && item.class != "projectile")
-				self giveMaxAmmo(fullName);
+				self giveMaxAmmo(weaponName);
 			break;
 
 		case "equipment":
@@ -85,12 +185,12 @@ giveItem(itemOrDef)
 			break;
 
 		case "offhand":
-			if (item.name == "flash_grenade_mp")
+			if (weaponName == "flash_grenade_mp")
 				self setOffhandSecondaryClass("flash");
 			else
 				self setOffhandSecondaryClass("smoke");
 
-			self giveWeapon(item.name);
+			self giveWeapon(weaponName);
 			break;
 
 		case "perk":
@@ -98,9 +198,12 @@ giveItem(itemOrDef)
 			self maps\mp\perks\_perks::givePerk(item.name);
 			break;
 	}
+
+	if (switchTo && self hasWeapon(weaponName))
+		self switchToWeaponImmediate(weaponName);
 }
 
-takeItem(itemOrDef)
+take(itemOrDef)
 {
 	def = ternary(isDefined(itemOrDef.item), itemOrDef, undefined);
 	item = coalesce(itemOrDef.item, itemOrDef);
@@ -113,23 +216,26 @@ takeItem(itemOrDef)
 
 	if (!isDefined(item.type)) return;
 
+	weaponName = coalesce(def.fullName, item.name);
+	if (item.name == "specialty_tacticalinsertion")
+		weaponName = "flare_mp";
+	wasActive = (self getCurrentWeapon() == weaponName);
+
 	switch (item.type) {
 		case "weapon":
-			fullName = coalesce(def.fullName, item.name);
-			self takeWeapon(fullName);
+			self takeWeapon(weaponName);
 			break;
 
 		case "equipment":
 			self setOffhandPrimaryClass("other");
 			self maps\mp\_utility::_unsetPerk(item.name);
-			weaponName = ternary(item.name == "specialty_tacticalinsertion", "flare_mp", item.name);
 			if (self hasWeapon(weaponName))
 				self takeWeapon(weaponName);
 			break;
 
 		case "offhand":
 			self setOffhandSecondaryClass("smoke");
-			self takeWeapon(item.name);
+			self takeWeapon(weaponName);
 			break;
 
 		case "perk":
@@ -137,9 +243,110 @@ takeItem(itemOrDef)
 			self maps\mp\_utility::_unsetPerk(item.name);
 			break;
 	}
+
+	if (wasActive)
+		self switchToWeaponImmediate(self getWeaponsListPrimaries()[0]);
+}
+
+has(itemOrDef)
+{
+	def = ternary(isDefined(itemOrDef.item), itemOrDef, undefined);
+	item = coalesce(itemOrDef.item, itemOrDef);
+
+	if (isDefined(item.customHas))
+	{
+		return self [[item.customHas]](item, def);
+	}
+
+	if (!isDefined(item.type)) return;
+
+	weaponName = coalesce(def.fullName, item.name);
+	if (item.name == "specialty_tacticalinsertion")
+		weaponName = "flare_mp";
+
+	switch (item.type) {
+		case "weapon":
+			return self hasWeapon(weaponName);
+
+		case "equipment":
+			return (self maps\mp\_utility::_hasPerk(item.name) || self hasWeapon(weaponName));
+
+		case "offhand":
+			return self hasWeapon(weaponName);
+
+		case "perk":
+		case "deathstreak":
+			return self maps\mp\_utility::_hasPerk(item.name);
+	}
+}
+
+printItems(items)
+{
+	foreach (weapon in items["weapon"])
+	{
+		attachmentStr = "";
+		foreach (attachment in weapon.validAttachments)
+			attachmentStr += attachment.name + ", ";
+		attachmentStr = getSubStr(attachmentStr, 0, attachmentStr.size - 2);
+		self iPrintLn("^3[items] ^6[weapon] ^5" + weapon.name + " ^7(" + weapon.class + ") [" + attachmentStr + "]");
+	}
+	self iPrintLn("-----------------------------------");
+
+	foreach (attachment in items["attachment"])
+	{
+		combosStr = "";
+		foreach (comboAtt, valid in attachment.combosMap)
+			if (valid) combosStr += comboAtt + ", ";
+		combosStr = getSubStr(combosStr, 0, combosStr.size - 2);
+
+		self iPrintLn("^3[items] ^6[attachment] ^5" + attachment.name + " ^7(" + attachment.kind + ") [" + combosStr + "]");
+	}
+	self iPrintLn("-----------------------------------");
+
+	foreach (camo in items["camo"])
+		self iPrintLn("^3[items] ^6[camo] ^5" + camo.name + " ^7(" + camo.id + ")");
+	self iPrintLn("-----------------------------------");
+
+	foreach (equipment in items["equipment"])
+		self iPrintLn("^3[items] ^6[equipment] ^5" + equipment.name);
+	self iPrintLn("-----------------------------------");
+
+	foreach (offhand in items["offhand"])
+		self iPrintLn("^3[items] ^6[offhand] ^5" + offhand.name);
+	self iPrintLn("-----------------------------------");
+
+	foreach (tierNum, tier in items["perk"]["base"])
+		foreach (perk in tier)
+			self iPrintLn("^3[items] ^6[perk " + tierNum + "] ^5" + perk.name + " ^7(-> " + perk.upgrade.name + ")");
+	foreach (tierNum, tier in items["perk"]["upgrade"])
+		foreach (perk in tier)
+			self iPrintLn("^3[items] ^6[perk upgrade " + tierNum + "] ^5" + perk.name + " ^7(<- " + perk.base.name + ")");
+	self iPrintLn("-----------------------------------");
+
+	foreach (deathstreak in items["deathstreak"])
+		self iPrintLn("^3[items] ^6[deathstreak] ^5" + deathstreak.name + " ^7(" + deathstreak.deathCount + ")");
+	self iPrintLn("-----------------------------------");
 }
 
 // ##### PUBLIC END #####
+
+itemNameIs(item, name)
+{
+	if (!isDefined(item.name)) return false;
+	return (item.name == name);
+}
+
+itemNameStartsWithLC(item, nameLC)
+{
+	if (!isDefined(item.name)) return false;
+	return (stringStartsWith(toLower(item.name), nameLC));
+}
+
+itemNameIsSubStrOfLC(item, nameLC)
+{
+	if (!isDefined(item.name)) return false;
+	return (isSubStr(toLower(item.name), nameLC));
+}
 
 parseItems()
 {
@@ -152,9 +359,6 @@ parseItems()
 
 	items = scripts\_items_plugins::getItems(items);
 	game["_items__items"] = items;
-
-	if (getDvarInt("scr_items_print"))
-		printItems(items);
 
 	return items;
 }
@@ -403,52 +607,4 @@ parseAttachmentCombosTable(items, path)
 			items["attachment"][a1].combosMap[a2] = (tableLookup(path, 0, a1, colIndex) != "no");
 
 	return items;
-}
-
-printItems(items)
-{
-	foreach (weapon in items["weapon"])
-	{
-		attachmentStr = "";
-		foreach (attachment in weapon.validAttachments)
-			attachmentStr += attachment + ", ";
-		attachmentStr = getSubStr(attachmentStr, 0, attachmentStr.size - 2);
-		printLn("^3[items] ^6[weapon] ^5" + weapon.name + " ^7(" + weapon.class + ") [" + attachmentStr + "]");
-	}
-	printLn("-----------------------------------");
-
-	foreach (attachment in items["attachment"])
-	{
-		combosStr = "";
-		foreach (comboAtt, valid in attachment.combosMap)
-			if (valid) combosStr += comboAtt + ", ";
-		combosStr = getSubStr(combosStr, 0, combosStr.size - 2);
-
-		printLn("^3[items] ^6[attachment] ^5" + attachment.name + " ^7(" + attachment.kind + ") [" + combosStr + "]");
-	}
-	printLn("-----------------------------------");
-
-	foreach (camo in items["camo"])
-		printLn("^3[items] ^6[camo] ^5" + camo.name + " ^7(" + camo.id + ")");
-	printLn("-----------------------------------");
-
-	foreach (equipment in items["equipment"])
-		printLn("^3[items] ^6[equipment] ^5" + equipment.name);
-	printLn("-----------------------------------");
-
-	foreach (offhand in items["offhand"])
-		printLn("^3[items] ^6[offhand] ^5" + offhand.name);
-	printLn("-----------------------------------");
-
-	foreach (tierNum, tier in items["perk"]["base"])
-		foreach (perk in tier)
-			printLn("^3[items] ^6[perk " + tierNum + "] ^5" + perk.name + " ^7(-> " + perk.upgrade.name + ")");
-	foreach (tierNum, tier in items["perk"]["upgrade"])
-		foreach (perk in tier)
-			printLn("^3[items] ^6[perk upgrade " + tierNum + "] ^5" + perk.name + " ^7(<- " + perk.base.name + ")");
-	printLn("-----------------------------------");
-
-	foreach (deathstreak in items["deathstreak"])
-		printLn("^3[items] ^6[deathstreak] ^5" + deathstreak.name + " ^7(" + deathstreak.deathCount + ")");
-	printLn("-----------------------------------");
 }

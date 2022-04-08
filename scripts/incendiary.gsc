@@ -74,6 +74,11 @@ takeIncendiary(takeConcussion)
 	self setWeaponHudIconOverride("secondaryoffhand", "none");
 }
 
+hasIncendiary()
+{
+	return self.hasIncendiary;
+}
+
 spawnFire(position, radius, duration, damage, owner, killCamEnt)
 {
 	points = getFirePoints(position, radius);

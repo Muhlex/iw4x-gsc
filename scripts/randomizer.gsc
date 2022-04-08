@@ -521,19 +521,19 @@ OnGiveLoadoutEnd(isSpawn, hadBlastshield)
 takeItemsNoPerks(loadout)
 {
 	foreach (weapon in loadout.weapons)
-		self scripts\_items::takeItem(weapon);
+		self scripts\_items::take(weapon);
 
-	self scripts\_items::takeItem(loadout.equipment);
-	self scripts\_items::takeItem(loadout.offhand);
-	self scripts\_items::takeItem(loadout.deathstreak);
+	self scripts\_items::take(loadout.equipment);
+	self scripts\_items::take(loadout.offhand);
+	self scripts\_items::take(loadout.deathstreak);
 }
 
 takeItemsOnlyPerks(loadout)
 {
 	foreach (perk in loadout.perks.perkList)
 	{
-		self scripts\_items::takeItem(perk);
-		self scripts\_items::takeItem(perk.upgrade);
+		self scripts\_items::take(perk);
+		self scripts\_items::take(perk.upgrade);
 	}
 }
 
@@ -553,7 +553,7 @@ giveWeapons(weaponDefs, isSpawn)
 	weaponDefs = coalesce(weaponDefs, []);
 
 	foreach (weaponDef in weaponDefs)
-		self scripts\_items::giveItem(weaponDef);
+		self scripts\_items::give(weaponDef);
 
 	self.primaryWeapon = weaponDefs[0].fullName;
 	self.secondaryWeapon = weaponDefs[1].fullName;
@@ -582,13 +582,13 @@ giveWeapons(weaponDefs, isSpawn)
 giveEquipment(equipment)
 {
 	if (!isDefined(equipment)) return;
-	self scripts\_items::giveItem(equipment);
+	self scripts\_items::give(equipment);
 }
 
 giveOffhand(offhand)
 {
 	if (!isDefined(offhand)) return;
-	self scripts\_items::giveItem(offhand);
+	self scripts\_items::give(offhand);
 }
 
 givePerks(perks, upgradeMode)
@@ -597,10 +597,10 @@ givePerks(perks, upgradeMode)
 
 	foreach (perk in perks.perkList)
 	{
-		self scripts\_items::giveItem(perk);
+		self scripts\_items::give(perk);
 
 		if (self doPerkUpgrade(perk, upgradeMode, perks.ignoreHierarchy))
-			self scripts\_items::giveItem(perk.upgrade);
+			self scripts\_items::give(perk.upgrade);
 	}
 }
 
@@ -627,7 +627,7 @@ giveDeathstreak(deathstreak, isSpawn)
 
 	if (self.pers["cur_death_streak"] < deathCount) return;
 
-	self scripts\_items::giveItem(deathstreak);
+	self scripts\_items::give(deathstreak);
 
 	if (isSpawn)
 		self thread maps\mp\gametypes\_hud_message::splashNotify(deathstreak.name);

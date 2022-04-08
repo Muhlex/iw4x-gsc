@@ -181,6 +181,22 @@ arrayFind(array, func, a1, a2, a3, a4, a5, a6, a7, a8)
 	return undefined;
 }
 
+arrayFindRecursive(array, func, a1, a2, a3, a4, a5, a6, a7, a8)
+{
+	foreach (el in array)
+	{
+		if (isArray(el))
+		{
+			result = self arrayFindRecursive(el, func, a1, a2, a3, a4, a5, a6, a7, a8);
+			if (isDefined(result)) return result;
+		}
+
+		if (self [[func]](el, a1, a2, a3, a4, a5, a6, a7, a8))
+			return el;
+	}
+	return undefined;
+}
+
 arrayFilter(array, func, a1, a2, a3, a4, a5, a6, a7, a8)
 {
 	result = [];
@@ -294,8 +310,19 @@ respond(msg)
 		self iPrintLn(msg);
 }
 
+getWeaponNameNoAttachments(name)
+{
+	suffix = ternary(stringEndsWith(name, "_mp"), "_mp", "");
+
+	return strTok(name, "_")[0] + suffix;
+}
+
 buildWeaponName(name, attachments)
 {
+	foreach (i, attachment in attachments)
+		if (!isString(attachment))
+			attachments[i] = attachment.name;
+
 	for (i = 0; i < 2; i++)
 		if (!isDefined(attachments[i]))
 			attachments[i] = "none";

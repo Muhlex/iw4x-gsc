@@ -15,7 +15,8 @@ init()
 	registerCommand("fastrestart restart fr", scripts\commands\fastrestart::cmd, 40, "Restart the map");
 	registerCommand("maprestart mr", scripts\commands\maprestart::cmd, 40, "Reload and restart the map");
 	registerCommand("map", scripts\commands\map::cmd, 40, "Change the current map");
-	registerCommand("give", scripts\commands\give::cmd, 50, "Give a weapon to a player");
+	registerCommand("give", scripts\commands\give::cmd, 50, "Give an item to a player");
+	registerCommand("take", scripts\commands\take::cmd, 50, "Take an item from a player");
 	registerCommand("kill", scripts\commands\kill::cmd, 50, "Kill a specified player");
 	registerCommand("freelook fly", scripts\commands\freelook::cmd, 50, "Temporary freelook spectating");
 	registerCommand("spectate spec spy", scripts\commands\spectate::cmd, 50, "Quietly spectate target");
