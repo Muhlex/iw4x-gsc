@@ -153,11 +153,19 @@ weaponDefSetCamo(camo)
 	return 0;
 }
 
-give(itemOrDef, switchTo)
+give(itemOrDef, replaceOld, switchTo)
 {
 	def = ternary(isDefined(itemOrDef.item), itemOrDef, undefined);
 	item = coalesce(itemOrDef.item, itemOrDef);
+	replaceOld = coalesce(replaceOld, false);
 	switchTo = coalesce(switchTo, false);
+
+	if (replaceOld)
+	{
+		foreach (oldItem in coalesce(getItems()[item.type], []))
+			if (self has(oldItem))
+				self take(oldItem);
+	}
 
 	if (isDefined(item.customGive))
 	{

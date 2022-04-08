@@ -51,7 +51,7 @@ cmd(args, prefix)
 		}
 
 		target scripts\_items::take(defPrev);
-		target scripts\_items::give(def, true);
+		target scripts\_items::give(def, false, true);
 		self respond("^2Removed ^7" + item.name + " ^2from ^7" + target.name + "^2's ^7" + def.item.name + "^2.");
 
 		return;

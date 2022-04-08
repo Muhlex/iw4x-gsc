@@ -61,14 +61,15 @@ cmd(args, prefix)
 		}
 
 		target scripts\_items::take(defPrev);
-		target scripts\_items::give(def, true);
+		target scripts\_items::give(def, false, true);
 		self respond("^2Attached ^7" + item.name + " ^2to ^7" + target.name + "^2's ^7" + def.item.name + "^2.");
 
 		return;
 	}
 
+	replaceOld = (item.type == "equipment" || item.type == "offhand");
 	switchTo = (item.type == "weapon");
-	target scripts\_items::give(item, switchTo);
+	target scripts\_items::give(item, replaceOld, switchTo);
 
 	self respond("^2Given ^7" + item.name + " ^2to ^7" + target.name + "^2.");
 }
