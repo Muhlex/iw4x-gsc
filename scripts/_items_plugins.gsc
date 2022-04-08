@@ -1,16 +1,22 @@
 #include scripts\_utility;
 
+// ##### PUBLIC START #####
+
 getItems(items)
 {
 	items = coalesce(items, []);
 
-	items = addItem(items, "offhands", incendiary());
+	// Add custom items here:
+	items = addItem(items, incendiary());
 
 	return items;
 }
 
-addItem(items, type, item)
+// ##### PUBLIC END #####
+
+addItem(items, item)
 {
+	type = item.type;
 	index = coalesce(items[type].size, 0);
 	items[type][index] = item;
 	return items;
@@ -22,6 +28,7 @@ incendiary()
 {
 	incendiary = spawnStruct();
 	incendiary.name = "incendiary_grenade_mp";
+	incendiary.type = "offhand";
 	incendiary.image = "hud_burningbarrelicon";
 	incendiary.iString = &"Incendiary Grenade";
 	incendiary.iStringDesc = &"Area denial by fire.";

@@ -2,33 +2,158 @@
 
 init()
 {
-	setDvarIfUninitialized("scr_parser_print", false);
+	setDvarIfUninitialized("scr_items_print", false);
 
-	if (isDefined(game["_parser__items"]))
-		return;
-
-	parseItems();
+	if (!isDefined(game["_items__items"]))
+		parseItems();
 }
+
+// ##### PUBLIC START #####
 
 getItems()
 {
-	if (isDefined(game["_parser__items"]))
-		return game["_parser__items"];
+	if (isDefined(game["_items__items"]))
+		return game["_items__items"];
 	else
 		return parseItems();
 }
 
+getItemByName(name, exactMatch)
+{
+	name = coalesce(name, "");
+	exactMatch = coalesce(exactMatch, false);
+
+	// ...
+}
+
+createWeaponDef(weapon, attachments, camo)
+{
+	items = getItems();
+
+	attachments = coalesce(attachments, []);
+	camo = coalesce(camo, items["camo"]["none"]);
+
+	// Transform parameters to items if strings were passed
+	if (isString(weapon))
+		weapon = items["weapon"][weapon];
+
+	foreach (i, attachment in attachments)
+		if (isString(attachment))
+			attachments[i] = items["attachment"][attachment];
+
+	if (isString(camo))
+		camo = items["camo"][camo];
+
+	attachmentNames = [];
+	foreach (attachment in attachments)
+		attachmentNames[attachmentNames.size] = attachment.name;
+
+	def = spawnStruct();
+	def.item = weapon;
+	def.attachments = attachments;
+	def.camo = camo;
+	def.fullName = buildWeaponName(weapon.name, attachmentNames);
+
+	return def;
+}
+
+giveItem(itemOrDef)
+{
+	def = ternary(isDefined(itemOrDef.item), itemOrDef, undefined);
+	item = coalesce(itemOrDef.item, itemOrDef);
+
+	if (isDefined(item.customGive))
+	{
+		self [[item.customGive]](item, def);
+		return;
+	}
+
+	if (!isDefined(item.type)) return;
+
+	switch (item.type) {
+		case "weapon":
+			fullName = coalesce(def.fullName, item.name);
+			self maps\mp\_utility::_giveWeapon(fullName, def.camo.id);
+
+			if (self hasPerk("specialty_extraammo", true) && item.class != "projectile")
+				self giveMaxAmmo(fullName);
+			break;
+
+		case "equipment":
+			self setOffhandPrimaryClass("other");
+			self maps\mp\perks\_perks::givePerk(item.name);
+			break;
+
+		case "offhand":
+			if (item.name == "flash_grenade_mp")
+				self setOffhandSecondaryClass("flash");
+			else
+				self setOffhandSecondaryClass("smoke");
+
+			self giveWeapon(item.name);
+			break;
+
+		case "perk":
+		case "deathstreak":
+			self maps\mp\perks\_perks::givePerk(item.name);
+			break;
+	}
+}
+
+takeItem(itemOrDef)
+{
+	def = ternary(isDefined(itemOrDef.item), itemOrDef, undefined);
+	item = coalesce(itemOrDef.item, itemOrDef);
+
+	if (isDefined(item.customTake))
+	{
+		self [[item.customTake]](item, def);
+		return;
+	}
+
+	if (!isDefined(item.type)) return;
+
+	switch (item.type) {
+		case "weapon":
+			fullName = coalesce(def.fullName, item.name);
+			self takeWeapon(fullName);
+			break;
+
+		case "equipment":
+			self setOffhandPrimaryClass("other");
+			self maps\mp\_utility::_unsetPerk(item.name);
+			weaponName = ternary(item.name == "specialty_tacticalinsertion", "flare_mp", item.name);
+			if (self hasWeapon(weaponName))
+				self takeWeapon(weaponName);
+			break;
+
+		case "offhand":
+			self setOffhandSecondaryClass("smoke");
+			self takeWeapon(item.name);
+			break;
+
+		case "perk":
+		case "deathstreak":
+			self maps\mp\_utility::_unsetPerk(item.name);
+			break;
+	}
+}
+
+// ##### PUBLIC END #####
+
 parseItems()
 {
 	items = [];
-	items = parsePerkTable(items, "mp/perkTable.csv"); // must parse equipment before offhands!
+	items = parsePerkTable(items, "mp/perkTable.csv"); // Must parse equipment before offhands!
+	items = parseAttachmentsTable(items, "mp/attachmentTable.csv"); // Must parse attachments before weapons!
+	items = parseAttachmentCombosTable(items, "mp/attachmentcombos.csv");
 	items = parseStatsTable(items, "mp/statstable.csv");
 	items = parseCamoTable(items, "mp/camoTable.csv");
-	items = parseAttachmentsTable(items, "mp/attachmentTable.csv");
-	items = parseAttachmentCombosTable(items, "mp/attachmentcombos.csv");
-	game["_parser__items"] = items;
 
-	if (getDvarInt("scr_parser_print"))
+	items = scripts\_items_plugins::getItems(items);
+	game["_items__items"] = items;
+
+	if (getDvarInt("scr_items_print"))
 		printItems(items);
 
 	return items;
@@ -65,6 +190,7 @@ parsePerkTable(items, path)
 
 				base = spawnStruct();
 				base.name = name;
+				base.type = "perk";
 				base.tier = int(getSubStr(type, type.size - 1, type.size));
 				base.image = image;
 				precacheShader(base.image);
@@ -76,6 +202,7 @@ parsePerkTable(items, path)
 
 				upgrade = spawnStruct();
 				upgrade.name = upgradeName;
+				upgrade.type = "perk";
 				upgrade.tier = base.tier;
 				upgrade.image = tableLookup(path, 1, upgrade.name, 3);
 				precacheShader(upgrade.image);
@@ -95,6 +222,7 @@ parsePerkTable(items, path)
 
 				deathstreak = spawnStruct();
 				deathstreak.name = name;
+				deathstreak.type = "deathstreak";
 				deathstreak.deathCount = int(tableLookupByRow(path, i, 6));
 				deathstreak.image = image;
 				precacheShader(deathstreak.image);
@@ -108,6 +236,7 @@ parsePerkTable(items, path)
 
 				equipment = spawnStruct();
 				equipment.name = name;
+				equipment.type = "equipment";
 				equipment.image = image;
 				precacheShader(equipment.image);
 				equipment.iString = iString;
@@ -122,8 +251,8 @@ parsePerkTable(items, path)
 		knownImages[image] = image;
 	}
 
-	items["perks"] = perks;
-	items["deathstreaks"] = deathstreaks;
+	items["perk"] = perks;
+	items["deathstreak"] = deathstreaks;
 	items["equipment"] = equipments;
 	return items;
 }
@@ -151,6 +280,7 @@ parseStatsTable(items, path)
 			case "primary":
 				weapon = spawnStruct();
 				weapon.name = name;
+				weapon.type = "weapon";
 				weapon.class = getSubStr(class, "weapon_".size, class.size);
 				weapon.image = image;
 				precacheShader(weapon.image);
@@ -160,9 +290,9 @@ parseStatsTable(items, path)
 
 				for (j = 11; j < 22 ; j++)
 				{
-					attachment = tableLookupByRow(path, i, j);
-					if (attachment != "")
-						weapon.validAttachments[weapon.validAttachments.size] = attachment;
+					attachmentName = tableLookupByRow(path, i, j);
+					if (attachmentName != "")
+						weapon.validAttachments[weapon.validAttachments.size] = items["attachment"][attachmentName];
 				}
 
 				weapons[name] = weapon;
@@ -176,6 +306,7 @@ parseStatsTable(items, path)
 
 				offhand = spawnStruct();
 				offhand.name = name;
+				offhand.type = "offhand";
 				offhand.image = image;
 				precacheShader(offhand.image);
 				offhand.iString = iString;
@@ -184,8 +315,8 @@ parseStatsTable(items, path)
 		}
 	}
 
-	items["weapons"] = weapons;
-	items["offhands"] = offhands;
+	items["weapon"] = weapons;
+	items["offhand"] = offhands;
 	return items;
 }
 
@@ -209,6 +340,7 @@ parseCamoTable(items, path)
 		camo = spawnStruct();
 		camo.id = id;
 		camo.name = name;
+		camo.type = "camo";
 		camo.image = tableLookupByRow(path, i, 4);
 		precacheShader(camo.image);
 		camo.iString = tableLookupIString(path, 0, id, 2);
@@ -216,7 +348,7 @@ parseCamoTable(items, path)
 		camos[name] = camo;
 	}
 
-	items["camos"] = camos;
+	items["camo"] = camos;
 	return items;
 }
 
@@ -230,16 +362,17 @@ parseAttachmentsTable(items, path)
 
 	for (i = 1; true; i++)
 	{
-		type = tableLookupByRow(path, i, 2);
-		if (type == "none") continue;
-		if (type == "") break;
+		kind = tableLookupByRow(path, i, 2);
+		if (kind == "none") continue;
+		if (kind == "") break;
 
 		name = tableLookupByRow(path, i, 4);
 		if (arrayContains(CUT_ATTACHMENTS, name)) continue;
 
 		attachment = spawnStruct();
-		attachment.type = type;
 		attachment.name = name;
+		attachment.type = "attachment";
+		attachment.kind = kind;
 		attachment.image = tableLookupByRow(path, i, 6);
 		precacheShader(attachment.image);
 		attachment.iString = tableLookupIString(path, 4, name, 3);
@@ -249,7 +382,7 @@ parseAttachmentsTable(items, path)
 		attachments[name] = attachment;
 	}
 
-	items["attachments"] = attachments;
+	items["attachment"] = attachments;
 	return items;
 }
 
@@ -267,55 +400,55 @@ parseAttachmentCombosTable(items, path)
 
 	foreach (a1 in getArrayKeys(attachmentCols))
 		foreach (a2, colIndex in attachmentCols)
-			items["attachments"][a1].combosMap[a2] = (tableLookup(path, 0, a1, colIndex) != "no");
+			items["attachment"][a1].combosMap[a2] = (tableLookup(path, 0, a1, colIndex) != "no");
 
 	return items;
 }
 
 printItems(items)
 {
-	foreach (weapon in items["weapons"])
+	foreach (weapon in items["weapon"])
 	{
 		attachmentStr = "";
 		foreach (attachment in weapon.validAttachments)
 			attachmentStr += attachment + ", ";
 		attachmentStr = getSubStr(attachmentStr, 0, attachmentStr.size - 2);
-		printLn("^3[parser] ^6[weapon] ^5" + weapon.name + " ^7(" + weapon.class + ") [" + attachmentStr + "]");
+		printLn("^3[items] ^6[weapon] ^5" + weapon.name + " ^7(" + weapon.class + ") [" + attachmentStr + "]");
 	}
 	printLn("-----------------------------------");
 
-	foreach (attachment in items["attachments"])
+	foreach (attachment in items["attachment"])
 	{
 		combosStr = "";
 		foreach (comboAtt, valid in attachment.combosMap)
 			if (valid) combosStr += comboAtt + ", ";
 		combosStr = getSubStr(combosStr, 0, combosStr.size - 2);
 
-		printLn("^3[parser] ^6[attachment] ^5" + attachment.name + " ^7(" + attachment.type + ") [" + combosStr + "]");
+		printLn("^3[items] ^6[attachment] ^5" + attachment.name + " ^7(" + attachment.kind + ") [" + combosStr + "]");
 	}
 	printLn("-----------------------------------");
 
-	foreach (camo in items["camos"])
-		printLn("^3[parser] ^6[camo] ^5" + camo.name + " ^7(" + camo.id + ")");
+	foreach (camo in items["camo"])
+		printLn("^3[items] ^6[camo] ^5" + camo.name + " ^7(" + camo.id + ")");
 	printLn("-----------------------------------");
 
 	foreach (equipment in items["equipment"])
-		printLn("^3[parser] ^6[equipment] ^5" + equipment.name);
+		printLn("^3[items] ^6[equipment] ^5" + equipment.name);
 	printLn("-----------------------------------");
 
-	foreach (offhand in items["offhands"])
-		printLn("^3[parser] ^6[offhand] ^5" + offhand.name);
+	foreach (offhand in items["offhand"])
+		printLn("^3[items] ^6[offhand] ^5" + offhand.name);
 	printLn("-----------------------------------");
 
-	foreach (tierNum, tier in items["perks"]["base"])
+	foreach (tierNum, tier in items["perk"]["base"])
 		foreach (perk in tier)
-			printLn("^3[parser] ^6[perk " + tierNum + "] ^5" + perk.name + " ^7(-> " + perk.upgrade.name + ")");
-	foreach (tierNum, tier in items["perks"]["upgrade"])
+			printLn("^3[items] ^6[perk " + tierNum + "] ^5" + perk.name + " ^7(-> " + perk.upgrade.name + ")");
+	foreach (tierNum, tier in items["perk"]["upgrade"])
 		foreach (perk in tier)
-			printLn("^3[parser] ^6[perk upgrade " + tierNum + "] ^5" + perk.name + " ^7(<- " + perk.base.name + ")");
+			printLn("^3[items] ^6[perk upgrade " + tierNum + "] ^5" + perk.name + " ^7(<- " + perk.base.name + ")");
 	printLn("-----------------------------------");
 
-	foreach (deathstreak in items["deathstreaks"])
-		printLn("^3[parser] ^6[deathstreak] ^5" + deathstreak.name + " ^7(" + deathstreak.deathCount + ")");
+	foreach (deathstreak in items["deathstreak"])
+		printLn("^3[items] ^6[deathstreak] ^5" + deathstreak.name + " ^7(" + deathstreak.deathCount + ")");
 	printLn("-----------------------------------");
 }

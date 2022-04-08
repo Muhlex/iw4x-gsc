@@ -1,3 +1,4 @@
+// TODO: You can somehow very rarely spawn without a weapon?
 // TODO: Make it work with killstreaks.
 
 #include scripts\_utility;
@@ -27,8 +28,10 @@ init()
 	setDvarIfUninitialized("scr_randomizer_perk_upgrade_mode", PERK_UPGRADE_MODES.ALWAYS); // not applicable when ignoring perk hierarchy
 	setDvarIfUninitialized("scr_randomizer_deathstreak_death_count", -1); // -1 uses the regular ones
 
-	itemTypes = strTok("weapons camos attachments equipment offhands perks deathstreaks", " ");
+	items = scripts\_items::getItems();
+
 	listTypes = strTok("blacklist whitelist", " ");
+	itemTypes = getArrayKeys(items);
 
 	defaults["blacklist"]["weapons"] = "onemanarmy_mp stinger_mp deserteaglegold_mp";
 	defaults["blacklist"]["perks"] = "specialty_bling specialty_onemanarmy";
@@ -40,8 +43,6 @@ init()
 
 	if (!getDvarInt("scr_randomizer_enabled")) return;
 
-	items = scripts\_parser::getItems();
-	items = scripts\randomizer_plugins::getItems(items);
 	items = parseFilterLists(items, itemTypes, listTypes);
 
 	level.randomizer = spawnStruct();
@@ -112,7 +113,7 @@ OnPlayerConnected()
 		player thread OnPlayerChangedKit();
 		player thread OnPlayerDeath();
 		player thread OnPlayerWeaponSwitchStarted();
-		// player thread OnPlayerDebugKey();
+		player thread OnPlayerDebugKey();
 	}
 }
 
@@ -168,6 +169,8 @@ OnPlayerWeaponSwitchStarted()
 
 		if (coalesce(weaponInventoryType(newWeaponName), "") == "offhand")
 			self.randomizer.activeOffhand = newWeaponName;
+		else
+			self.randomizer.activeOffhand = undefined;
 
 		self thread OnPlayerOffhandEnd();
 	}
@@ -336,50 +339,38 @@ getRandomWeapons(count)
 	if (attachmentCount > 2) attachmentCount = 2;
 	else if (attachmentCount < 0) attachmentCount = randomInt(3);
 
-	rest = level.randomizer.items["weapons"];
-	weapons = [];
+	rest = level.randomizer.items["weapon"];
+	weaponDefs = [];
 
 	for (i = 0; i < count; i++)
 	{
 		item = arrayGetRandom(rest);
 		rest = arrayRemove(rest, item);
 
-		weapon = spawnStruct();
-		weapon.item = item;
-		weapon.attachments = getRandomAttachments(weapon.item.validAttachments, attachmentCount);
-		weapon.fullName = buildWeaponName(weapon.item.name, weapon.attachments);
-		weapon.camo = getRandomCamo();
-		weapons[i] = weapon;
+		attachmentNames = getRandomAttachments(item.validAttachments, attachmentCount);
+		weaponDefs[i] = scripts\_items::createWeaponDef(item, attachmentNames, getRandomCamo());
 	}
-	return weapons;
+	return weaponDefs;
 }
 
 getRandomAttachments(validAttachments, count)
 {
-	attachmentItems = level.randomizer.items["attachments"];
-
-	rest = [];
-	foreach (attachment in validAttachments)
-		if (isDefined(attachmentItems[attachment]))
-			rest[rest.size] = attachment;
+	rest = validAttachments;
 
 	attachments = [];
 	for (i = 0; i < count; i++)
 	{
 		if (rest.size == 0)
-		{
-			attachments[attachments.size] = undefined;
 			continue;
-		}
 
 		if (i > 0)
 		{
 			prevAttachment = attachments[i - 1];
 			prevRest = rest;
 			rest = [];
-			foreach (va in prevRest)
-				if (attachmentItems[va].combosMap[prevAttachment])
-					rest[rest.size] = va;
+			foreach (attachment in prevRest)
+				if (attachment.combosMap[prevAttachment.name])
+					rest[rest.size] = attachment;
 		}
 
 		attachments[attachments.size] = arrayGetRandom(rest);
@@ -389,7 +380,7 @@ getRandomAttachments(validAttachments, count)
 
 getRandomCamo()
 {
-	return arrayGetRandom(level.randomizer.items["camos"]);
+	return arrayGetRandom(level.randomizer.items["camo"]);
 }
 
 getRandomEquipment()
@@ -399,12 +390,12 @@ getRandomEquipment()
 
 getRandomOffhand()
 {
-	return arrayGetRandom(level.randomizer.items["offhands"]);
+	return arrayGetRandom(level.randomizer.items["offhand"]);
 }
 
 getRandomPerks(ignoreTiers, ignoreHierarchy, perkCount)
 {
-	perkItems = level.randomizer.items["perks"];
+	perkItems = level.randomizer.items["perk"];
 	perkList = [];
 
 	if (ignoreTiers)
@@ -456,7 +447,7 @@ getRandomPerks(ignoreTiers, ignoreHierarchy, perkCount)
 
 getRandomDeathstreak()
 {
-	return arrayGetRandom(level.randomizer.items["deathstreaks"]);
+	return arrayGetRandom(level.randomizer.items["deathstreak"]);
 }
 
 giveLoadout(loadout, prevLoadout)
@@ -470,9 +461,6 @@ giveLoadout(loadout, prevLoadout)
 
 	self thread OnGiveLoadoutEnd(isSpawn, hadBlastshield);
 
-	self.tag_stowed_back = undefined;
-	self.tag_stowed_hip = undefined;
-
 	if (!isSpawn)
 	{
 		self common_scripts\utility::_disableWeaponSwitch();
@@ -481,7 +469,7 @@ giveLoadout(loadout, prevLoadout)
 
 	self takeAllWeapons();
 	if (isDefined(prevLoadout))
-		self takeCustomItems(prevLoadout);
+		self takeItemsNoPerks(prevLoadout);
 
 	if (isDefined(self.randomizer.activeOffhand))
 	{
@@ -492,6 +480,8 @@ giveLoadout(loadout, prevLoadout)
 
 	// TI needs the perk to be present, thus clear those after the wait
 	self maps\mp\_utility::_clearPerks();
+	if (isDefined(prevLoadout))
+		self takeItemsOnlyPerks(prevLoadout);
 
 	// give perks first because they can influence other items (scavenger pro)
 	self givePerks(loadout.perks, getDvarInt("scr_randomizer_perk_upgrade_mode"));
@@ -528,28 +518,23 @@ OnGiveLoadoutEnd(isSpawn, hadBlastshield)
 	}
 }
 
-takeCustomItems(loadout)
+takeItemsNoPerks(loadout)
 {
 	foreach (weapon in loadout.weapons)
-		if (isDefined(weapon.customTake))
-			self [[weapon.customTake]]();
+		self scripts\_items::takeItem(weapon);
 
-	if (isDefined(loadout.equipment.customTake))
-		self [[loadout.equipment.customTake]]();
+	self scripts\_items::takeItem(loadout.equipment);
+	self scripts\_items::takeItem(loadout.offhand);
+	self scripts\_items::takeItem(loadout.deathstreak);
+}
 
-	if (isDefined(loadout.offhand.customTake))
-		self [[loadout.offhand.customTake]]();
-
+takeItemsOnlyPerks(loadout)
+{
 	foreach (perk in loadout.perks.perkList)
 	{
-		if (isDefined(perk.customTake))
-			self [[perk.customTake]]();
-		if (isDefined(perk.upgrade.customTake))
-			self [[perk.upgrade.customTake]]();
+		self scripts\_items::takeItem(perk);
+		self scripts\_items::takeItem(perk.upgrade);
 	}
-
-	if (isDefined(loadout.deathstreak.customTake))
-		self [[loadout.deathstreak.customTake]]();
 }
 
 refreshCurrentOffhand()
@@ -563,70 +548,47 @@ refreshCurrentOffhand()
 	}
 }
 
-giveWeapons(weapons, isSpawn)
+giveWeapons(weaponDefs, isSpawn)
 {
-	if (!isDefined(weapons)) weapons = [];
+	weaponDefs = coalesce(weaponDefs, []);
 
-	foreach (weapon in weapons)
-	{
-		if (isDefined(weapon.customGive))
-			self [[weapon.customGive]]();
-		else
-			self maps\mp\_utility::_giveWeapon(weapon.fullName, weapon.camo.id);
+	foreach (weaponDef in weaponDefs)
+		self scripts\_items::giveItem(weaponDef);
 
-		if (self hasPerk("specialty_extraammo", true) && weapon.item.class != "projectile")
-			self giveMaxAmmo(weapon.fullName);
-	}
+	self.primaryWeapon = weaponDefs[0].fullName;
+	self.secondaryWeapon = weaponDefs[1].fullName;
+	self.isSniper = (coalesce(weaponDefs[0].item.class, "") == "sniper");
 
-	self.primaryWeapon = weapons[0].fullName;
-	self.secondaryWeapon = weapons[1].fullName;
-	self.isSniper = (isDefined(weapons[0].item.class) && weapons[0].item.class == "sniper");
-
-	if (isDefined(weapons[0]))
+	if (isDefined(weaponDefs[0]))
 	{
 		if (isSpawn)
 		{
-			self setSpawnWeapon(weapons[0].fullName);
+			self setSpawnWeapon(weaponDefs[0].fullName);
 			self maps\mp\gametypes\_class::_detachAll();
-			self setPlayerModelForWeaponClass(weapons[0].item.class);
+			self setPlayerModelForWeaponClass(weaponDefs[0].item.class);
 		}
 		else
 		{
-			self switchToWeapon(weapons[0].fullName);
+			self switchToWeapon(weaponDefs[0].fullName);
 		}
 	}
 
 	self maps\mp\gametypes\_weapons::updateMoveSpeedScale("primary");
 
-	if (isDefined(weapons[0].fullName) && weapons[0].fullName == "riotshield_mp" && level.inGracePeriod)
+	if (isDefined(weaponDefs[0].fullName) && weaponDefs[0].fullName == "riotshield_mp" && level.inGracePeriod)
 		self notify("weapon_change", "riotshield_mp");
 }
 
 giveEquipment(equipment)
 {
 	if (!isDefined(equipment)) return;
-
-	self setOffhandPrimaryClass("other");
-
-	if (isDefined(equipment.customGive))
-		self [[equipment.customGive]]();
-	else
-		self maps\mp\perks\_perks::givePerk(equipment.name);
+	self scripts\_items::giveItem(equipment);
 }
 
 giveOffhand(offhand)
 {
 	if (!isDefined(offhand)) return;
-
-	if (offhand.name == "flash_grenade_mp")
-		self setOffhandSecondaryClass("flash");
-	else
-		self setOffhandSecondaryClass("smoke");
-
-	if (isDefined(offhand.customGive))
-		self [[offhand.customGive]]();
-	else
-		self giveWeapon(offhand.name);
+	self scripts\_items::giveItem(offhand);
 }
 
 givePerks(perks, upgradeMode)
@@ -635,18 +597,10 @@ givePerks(perks, upgradeMode)
 
 	foreach (perk in perks.perkList)
 	{
-		if (isDefined(perk.customGive))
-			self [[perk.customGive]]();
-		else
-			self maps\mp\perks\_perks::givePerk(perk.name);
+		self scripts\_items::giveItem(perk);
 
 		if (self doPerkUpgrade(perk, upgradeMode, perks.ignoreHierarchy))
-		{
-			if (isDefined(perk.upgrade.customGive))
-				self [[perk.upgrade.customGive]]();
-			else
-				self maps\mp\perks\_perks::givePerk(perk.upgrade.name);
-		}
+			self scripts\_items::giveItem(perk.upgrade);
 	}
 }
 
@@ -673,10 +627,7 @@ giveDeathstreak(deathstreak, isSpawn)
 
 	if (self.pers["cur_death_streak"] < deathCount) return;
 
-	if (isDefined(deathstreak.customGive))
-		self [[deathstreak.customGive]]();
-	else
-		self maps\mp\perks\_perks::givePerk(deathstreak.name);
+	self scripts\_items::giveItem(deathstreak);
 
 	if (isSpawn)
 		self thread maps\mp\gametypes\_hud_message::splashNotify(deathstreak.name);
@@ -763,7 +714,6 @@ uiLoadoutDisplay(loadout, time, upcoming)
 	PADDING_HORZ = 10;
 	BAR_HEIGHT = 10;
 
-	items = level.randomizer.items;
 	ui = [];
 	uiTopRow = [];
 
@@ -774,10 +724,10 @@ uiLoadoutDisplay(loadout, time, upcoming)
 	bg hudSetPos("TOP RIGHT", "TOP RIGHT", 0, 110);
 	ui[ui.size] = bg;
 
-	foreach (i, weapon in loadout.weapons)
+	foreach (i, weaponDef in loadout.weapons)
 	{
 		weaponText = self hudCreateText("objective", 1.0);
-		weaponText.label = weapon.item.iString;
+		weaponText.label = weaponDef.item.iString;
 		if (i == 0)
 		{
 			weaponText hudSetParent(bg);
@@ -785,7 +735,7 @@ uiLoadoutDisplay(loadout, time, upcoming)
 		}
 		ui[ui.size] = weaponText;
 
-		weaponImage = self hudCreateImage(99, 50, weapon.item.image);
+		weaponImage = self hudCreateImage(99, 50, weaponDef.item.image);
 		if (i == 0)
 		{
 			weaponImage hudSetParent(weaponText);
@@ -801,11 +751,11 @@ uiLoadoutDisplay(loadout, time, upcoming)
 		ui[ui.size] = weaponImage;
 		uiTopRow[uiTopRow.size] = weaponImage;
 
-		foreach (j, attachment in weapon.attachments)
+		foreach (j, attachment in weaponDef.attachments)
 		{
 			if (!isDefined(attachment)) continue;
 
-			attachmentImage = self hudCreateImage(20, 20, items["attachments"][attachment].image);
+			attachmentImage = self hudCreateImage(20, 20, attachment.image);
 			attachmentImage.sort = 1;
 			if (j == 0)
 			{
@@ -821,7 +771,7 @@ uiLoadoutDisplay(loadout, time, upcoming)
 
 			attachmentText = self hudCreateText("default", 0.875);
 			attachmentText.sort = 1;
-			attachmentText.label = items["attachments"][attachment].iString;
+			attachmentText.label = attachment.iString;
 			attachmentText hudSetParent(ui[ui.size - 1]);
 			attachmentText hudSetPos("CENTER LEFT", "CENTER RIGHT", 4, -1);
 			ui[ui.size] = attachmentText;
