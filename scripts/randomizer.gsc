@@ -33,9 +33,9 @@ init()
 	listTypes = strTok("blacklist whitelist", " ");
 	itemTypes = getArrayKeys(items);
 
-	defaults["blacklist"]["weapons"] = "onemanarmy_mp stinger_mp deserteaglegold_mp";
-	defaults["blacklist"]["perks"] = "specialty_bling specialty_onemanarmy";
-	defaults["blacklist"]["deathstreaks"] = "specialty_copycat";
+	defaults["blacklist"]["weapon"] = "onemanarmy_mp stinger_mp deserteaglegold_mp";
+	defaults["blacklist"]["perk"] = "specialty_bling specialty_onemanarmy";
+	defaults["blacklist"]["deathstreak"] = "specialty_copycat";
 
 	foreach (list in listTypes)
 		foreach (item in itemTypes)
@@ -113,7 +113,7 @@ OnPlayerConnected()
 		player thread OnPlayerChangedKit();
 		player thread OnPlayerDeath();
 		player thread OnPlayerWeaponSwitchStarted();
-		player thread OnPlayerDebugKey();
+		// player thread OnPlayerDebugKey();
 	}
 }
 
