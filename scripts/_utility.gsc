@@ -60,6 +60,34 @@ isBotGUID(guid)
 	return (stringStartsWith(guid, "bot") && guid.size < 16);
 }
 
+isEnemy(player)
+{
+	if (self.team != "allies" && self.team != "axis")
+		return false;
+
+	if (player.team != "allies" && player.team != "axis")
+		return false;
+
+	if (!level.teamBased)
+		return true;
+
+	return (player.team != self.team);
+}
+
+isTeammate(player)
+{
+	if (self.team != "allies" && self.team != "axis")
+		return false;
+
+	if (player.team != "allies" && player.team != "axis")
+		return false;
+
+	if (!level.teamBased)
+		return false;
+
+	return (player.team == self.team);
+}
+
 isArray(var)
 {
 	return isDefined(getArrayKeys(var).size);
@@ -208,6 +236,17 @@ arrayFilter(array, func, a1, a2, a3, a4, a5, a6, a7, a8)
 	return result;
 }
 
+arrayRunRecursive(array, func, a1, a2, a3, a4, a5, a6, a7, a8)
+{
+	foreach (el in array)
+	{
+		if (isArray(el))
+			self arrayRunRecursive(el, func, a1, a2, a3, a4, a5, a6, a7, a8);
+		else
+			self [[func]](el, a1, a2, a3, a4, a5, a6, a7, a8);
+	}
+}
+
 stringStartsWith(str, startstr)
 {
 	return (getSubStr(str, 0, startstr.size) == startstr);
@@ -222,7 +261,24 @@ stringSplit(str, delim)
 {
 	// strTok only works as expected with singular characters
 	// https://www.cplusplus.com/reference/cstring/strtok/
+
 	array = [];
+	if (delim.size == 0)
+	{
+		for (i = 0; i < str.size; i++)
+			array[i] = str[i];
+		return array;
+	}
+
+	if (delim.size == 1)
+	{
+		array = strTok(str, delim);
+		if (stringStartsWith(str, delim))
+			array = arrayInsert(array, "", 0);
+		if (stringEndsWith(str, delim))
+			array[array.size] = "";
+		return array;
+	}
 
 	strChars = [];
 	delimChars = [];
@@ -281,11 +337,35 @@ stringRemoveColors(str)
 	return result;
 }
 
-setWeaponAmmoStockToClipsize(weapon)
+pow(base, exponent)
 {
-	maxClipSize = weaponClipSize(weapon);
-	if (isSubStr(weapon, "_akimbo")) maxClipSize *= 2;
-	self setWeaponAmmoStock(weapon, maxClipSize);
+	return exp(exponent * log(base));
+}
+
+round(float)
+{
+	if (float - int(float) < 0.5)
+		return floor(float);
+	else
+		return ceil(float);
+}
+
+floatRound(float, digits)
+{
+	digits = coalesce(digits, 0);
+	pow = pow(10, digits);
+
+	result = float;
+	result *= pow;
+	result = round(result);
+	result /= pow;
+
+	return result;
+}
+
+printLnConsole(str)
+{
+	printConsole(str + "\n");
 }
 
 // Dedicated server only (IW4X 0.6.1)
@@ -310,6 +390,13 @@ respond(msg)
 		self iPrintLn(msg);
 }
 
+setWeaponAmmoStockToClipsize(weapon)
+{
+	maxClipSize = weaponClipSize(weapon);
+	if (isSubStr(weapon, "_akimbo")) maxClipSize *= 2;
+	self setWeaponAmmoStock(weapon, maxClipSize);
+}
+
 getWeaponNameNoAttachments(name)
 {
 	suffix = ternary(stringEndsWith(name, "_mp"), "_mp", "");
@@ -319,69 +406,22 @@ getWeaponNameNoAttachments(name)
 
 buildWeaponName(name, attachments)
 {
+	assertEx(attachments.size <= 2, "Cannot put more than 2 attachments on a weapon.");
+
+	// Allow passing attachment structs from _items.gsc
 	foreach (i, attachment in attachments)
 		if (!isString(attachment))
 			attachments[i] = attachment.name;
 
-	for (i = 0; i < 2; i++)
-		if (!isDefined(attachments[i]))
-			attachments[i] = "none";
+	suffix = ternary(stringEndsWith(name, "_mp"), "_mp", "");
+	name = getSubStr(name, 0, name.size - suffix.size);
 
-	if (stringEndsWith(name, "_mp"))
-		name = getSubStr(name, 0, name.size - "_mp".size);
+	foreach (attachment in common_scripts\utility::alphabetize(attachments))
+		name += "_" + attachment;
 
-	name = _buildWeaponName(name, attachments[0], attachments[1]);
+	name += suffix;
 
 	return name;
-}
-
-// -- modified from _class.gsc --
-// This is bad, but cba to rewrite it atm. It sorts the attachments alphabetically.
-// Kind of... Don't use the original function directly because it breaks permanently
-// when calling it too early (before level.weaponList is defined)... Seriously.
-_buildWeaponName(baseName, attachment1, attachment2)
-{
-	if ( !isDefined( level.letterToNumber ) )
-		level.letterToNumber = maps\mp\gametypes\_class::makeLettersToNumbers();
-
-	weaponName = baseName;
-	attachments = [];
-
-	if ( attachment1 != "none" && attachment2 != "none" )
-	{
-		if ( level.letterToNumber[attachment1[0]] < level.letterToNumber[attachment2[0]] )
-		{
-			attachments[0] = attachment1;
-			attachments[1] = attachment2;
-		}
-		else if ( level.letterToNumber[attachment1[0]] == level.letterToNumber[attachment2[0]] )
-		{
-			if ( level.letterToNumber[attachment1[1]] < level.letterToNumber[attachment2[1]] )
-			{
-				attachments[0] = attachment1;
-				attachments[1] = attachment2;
-			}
-			else
-			{
-				attachments[0] = attachment2;
-				attachments[1] = attachment1;
-			}
-		}
-		else
-		{
-			attachments[0] = attachment2;
-			attachments[1] = attachment1;
-		}
-	}
-	else if ( attachment1 != "none" )
-		attachments[0] = attachment1;
-	else if ( attachment2 != "none" )
-		attachments[0] = attachment2;
-
-	foreach ( attachment in attachments )
-		weaponName += "_" + attachment;
-
-	return ( weaponName + "_mp" );
 }
 
 getPlayerByName(name, exactMatch)
