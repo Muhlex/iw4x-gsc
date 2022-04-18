@@ -16,6 +16,13 @@ getItems(items)
 
 addItem(items, item)
 {
+	if (isDefined(item.iString))
+		precacheString(item.iString);
+	if (isDefined(item.iStringDesc))
+		precacheString(item.iStringDesc);
+
+	item.custom = true;
+
 	type = item.type;
 	index = coalesce(items[type].size, 0);
 	items[type][index] = item;

@@ -288,52 +288,48 @@ has(itemOrDef)
 	}
 }
 
+// When printing to clients, this is not synchronous!
 printItems(items)
 {
+	items = coalesce(items, getItems());
+
+	// Can't print too much to client console at once, so keep track of the amount
+	// of prints so that some waits can be put between them.
+	i = 0;
+
+	i = self printItemLine("-----------------------------------", i);
+
 	foreach (weapon in items["weapon"])
-	{
-		attachmentStr = "";
-		foreach (attachment in weapon.validAttachments)
-			attachmentStr += attachment.name + ", ";
-		attachmentStr = getSubStr(attachmentStr, 0, attachmentStr.size - 2);
-		self iPrintLn("^3[items] ^6[weapon] ^5" + weapon.name + " ^7(" + weapon.class + ") [" + attachmentStr + "]");
-	}
-	self iPrintLn("-----------------------------------");
+		i = self printItemLine(weapon, i);
+	i = self printItemLine("-----------------------------------", i);
 
 	foreach (attachment in items["attachment"])
-	{
-		combosStr = "";
-		foreach (comboAtt, valid in attachment.combosMap)
-			if (valid) combosStr += comboAtt + ", ";
-		combosStr = getSubStr(combosStr, 0, combosStr.size - 2);
-
-		self iPrintLn("^3[items] ^6[attachment] ^5" + attachment.name + " ^7(" + attachment.kind + ") [" + combosStr + "]");
-	}
-	self iPrintLn("-----------------------------------");
+		i = self printItemLine(attachment, i);
+	i = self printItemLine("-----------------------------------", i);
 
 	foreach (camo in items["camo"])
-		self iPrintLn("^3[items] ^6[camo] ^5" + camo.name + " ^7(" + camo.id + ")");
-	self iPrintLn("-----------------------------------");
+		i = self printItemLine(camo, i);
+	i = self printItemLine("-----------------------------------", i);
 
 	foreach (equipment in items["equipment"])
-		self iPrintLn("^3[items] ^6[equipment] ^5" + equipment.name);
-	self iPrintLn("-----------------------------------");
+		i = self printItemLine(equipment, i);
+	i = self printItemLine("-----------------------------------", i);
 
 	foreach (offhand in items["offhand"])
-		self iPrintLn("^3[items] ^6[offhand] ^5" + offhand.name);
-	self iPrintLn("-----------------------------------");
+		i = self printItemLine(offhand, i);
+	i = self printItemLine("-----------------------------------", i);
 
 	foreach (tierNum, tier in items["perk"]["base"])
 		foreach (perk in tier)
-			self iPrintLn("^3[items] ^6[perk " + tierNum + "] ^5" + perk.name + " ^7(-> " + perk.upgrade.name + ")");
+			i = self printItemLine(perk, i);
 	foreach (tierNum, tier in items["perk"]["upgrade"])
 		foreach (perk in tier)
-			self iPrintLn("^3[items] ^6[perk upgrade " + tierNum + "] ^5" + perk.name + " ^7(<- " + perk.base.name + ")");
-	self iPrintLn("-----------------------------------");
+			i = self printItemLine(perk, i);
+	i = self printItemLine("-----------------------------------", i);
 
 	foreach (deathstreak in items["deathstreak"])
-		self iPrintLn("^3[items] ^6[deathstreak] ^5" + deathstreak.name + " ^7(" + deathstreak.deathCount + ")");
-	self iPrintLn("-----------------------------------");
+		i = self printItemLine(deathstreak, i);
+	i = self printItemLine("-----------------------------------", i);
 }
 
 // ##### PUBLIC END #####
@@ -364,11 +360,17 @@ parseItems()
 	items = parseAttachmentCombosTable(items, "mp/attachmentcombos.csv");
 	items = parseStatsTable(items, "mp/statstable.csv");
 	items = parseCamoTable(items, "mp/camoTable.csv");
+	arrayRunRecursive(items, ::setCustom, false);
 
 	items = scripts\_items_plugins::getItems(items);
 	game["_items__items"] = items;
 
 	return items;
+}
+
+setCustom(item, value)
+{
+	item.custom = value;
 }
 
 parsePerkTable(items, path)
@@ -615,4 +617,83 @@ parseAttachmentCombosTable(items, path)
 			items["attachment"][a1].combosMap[a2] = (tableLookup(path, 0, a1, colIndex) != "no");
 
 	return items;
+}
+
+printItemLine(itemOrStr, i)
+{
+	s1 = undefined;
+	s2 = undefined;
+	s3 = undefined;
+
+	if (isString(itemOrStr))
+	{
+		s1 = itemOrStr;
+	}
+	else
+	{
+		item = itemOrStr;
+
+		perkIdentifier = ternary(item.type == "perk", " " + item.tier, "");
+		perkIdentifier += ternary(item.type == "perk" && isDefined(item.base), " upgrade", "");
+		s1 = "^3[" + item.type + perkIdentifier + "] ^4";
+		// Disable localized strings for custom items as they may not be real ones:
+		s2 = ternary(item.custom, "^6Custom", item.iString);
+		s3 = ": ^5" + item.name;
+
+		switch (item.type) {
+			case "weapon":
+				attStr = "";
+				foreach (attachment in item.validAttachments)
+					attStr += attachment.name + ", ";
+				attStr = getSubStr(attStr, 0, attStr.size - 2);
+
+				s3 += " ^7(" + item.class + ") [" + attStr + "]";
+				break;
+
+			case "attachment":
+				combosStr = "";
+				foreach (comboAtt, valid in item.combosMap)
+					if (valid) combosStr += comboAtt + ", ";
+				combosStr = getSubStr(combosStr, 0, combosStr.size - 2);
+
+				s3 += " ^7(" + item.kind + ") [" + combosStr + "]";
+				break;
+
+			case "camo":
+				s3 += " ^7(" + item.id + ")";
+				break;
+
+			case "perk":
+				if (isDefined(item.upgrade))
+					s3 += " ^7(-> " + item.upgrade.name + ")";
+				else if (isDefined(item.base))
+					s3 += " ^7(<- " + item.base.name + ")";
+				break;
+
+			case "deathstreak":
+				s3 += " ^7(" + item.deathCount + ")";
+				break;
+		}
+	}
+
+	if (isPlayer(self))
+	{
+		if (isDefined(s3)) self iPrintLn(s1, s2, s3);
+		else if (isDefined(s2)) self iPrintLn(s1, s2);
+		else if (isDefined(s1)) self iPrintLn(s1);
+	}
+	else
+	{
+		if (isDefined(s3)) printLnConsole(s1, s2, s3);
+		else if (isDefined(s2)) printLnConsole(s1, s2);
+		else if (isDefined(s1)) printLnConsole(s1);
+	}
+
+	if (isDefined(i))
+	{
+		if (i % 8 == 7)
+			wait 0.05;
+
+		return i + 1;
+	}
 }
