@@ -1,5 +1,6 @@
 // TODO: You can somehow very rarely spawn without a weapon?
 // TODO: Make it work with killstreaks.
+// TODO: Make enum things global compiler vars, see maps\mp\gametypes\_teams.gsc
 
 #include scripts\_utility;
 
@@ -33,7 +34,7 @@ init()
 	listTypes = strTok("blacklist whitelist", " ");
 	itemTypes = getArrayKeys(items);
 
-	defaults["blacklist"]["weapon"] = "onemanarmy_mp stinger_mp deserteaglegold_mp";
+	defaults["blacklist"]["weapon"] = "onemanarmy_mp stinger_mp deserteaglegold_mp ak47classic_mp";
 	defaults["blacklist"]["perk"] = "specialty_bling specialty_onemanarmy";
 	defaults["blacklist"]["deathstreak"] = "specialty_copycat";
 
@@ -78,7 +79,10 @@ OnPlayerSpawn()
 
 OnPlayerSpawned(deathStreakValue)
 {
-	self waittill("spawned_player");
+	// This notify is technically kicked off before level.onSpawnPlayer. As notifies are
+	// handled at the end of the frame though, this is the earliest possible one AFTER
+	// the call of level.onSpawnPlayer.
+	self waittill("spawned");
 
 	self.pers["cur_death_streak"] = deathStreakValue;
 }
