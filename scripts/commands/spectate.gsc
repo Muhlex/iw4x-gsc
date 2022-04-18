@@ -46,6 +46,9 @@ cmd(args, prefix)
 
 setSpectate(target)
 {
+	if (isDefined(self.commands.spectate.target))
+		self unsetSpectate();
+
 	self.commands.spectate.prevOrigin = self.origin;
 
 	self allowSpectateTeam("allies", true);
@@ -62,6 +65,9 @@ setSpectate(target)
 
 unsetSpectate()
 {
+	if (!isDefined(self.commands.spectate.target))
+		return;
+
 	self maps\mp\gametypes\_spectating::setSpectatePermissions();
 	if (self.sessionstate == "spectator" && self.team != "spectator")
 	{

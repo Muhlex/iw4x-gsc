@@ -37,6 +37,9 @@ cmd(args, prefix)
 
 setFreelook()
 {
+	if (coalesce(self.commands.freelook.active, false))
+		self unsetFreelook();
+
 	self allowSpectateTeam("allies", false);
 	self allowSpectateTeam("axis", false);
 	self allowSpectateTeam("none", false);
@@ -51,6 +54,9 @@ setFreelook()
 
 unsetFreelook()
 {
+	if (!coalesce(self.commands.freelook.active, false))
+		return;
+
 	self maps\mp\gametypes\_spectating::setSpectatePermissions();
 	if (self.sessionstate == "spectator" && self.team != "spectator")
 	{
@@ -74,5 +80,5 @@ cleanupUnsetFreelook()
 	self common_scripts\utility::_enableWeapon();
 	weaponName = self getWeaponsListPrimaries()[0];
 	if (isDefined(weaponName))
-		self setSpawnWeapon(weaponName);
+		self switchToWeaponImmediate(weaponName);
 }
