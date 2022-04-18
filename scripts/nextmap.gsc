@@ -82,7 +82,7 @@ OnPlayercountChange()
 	if (!level.nextmap.randomize) return;
 	if (mapFitsPlayercount(getNextConfig().map)) return;
 
-	printLn("^3[nextmap]^7 Currently chosen next map does not fit playercount.");
+	printLnConsole("^3[nextmap]^7 Currently chosen next map does not fit playercount.");
 	setNextConfig(getRandomConfig());
 }
 
@@ -134,7 +134,7 @@ setNextMap(map, gametype)
 	if (isDefined(gametype))
 		gametypeStr = " (" + gametype + ")";
 
-	printLn("^3[nextmap]^7 Next map set to: " + map + gametypeStr);
+	printLnConsole("^3[nextmap]^7 Next map set to: " + map + gametypeStr);
 
 	if (isDefined(gametype))
 		str = "gametype " + gametype + " map " + map;
@@ -198,7 +198,7 @@ getRandomConfig()
 	}
 	if (maps.size == 0)
 	{
-		printLn("^3[nextmap]^7 ^1No maps defined for current player count.");
+		printLnConsole("^3[nextmap]^7 ^1No maps defined for current player count.");
 		maps[0] = defs[0].map;
 	}
 	map = getWeightedRandomItem("map", maps);
@@ -235,7 +235,7 @@ parseRotationString(str)
 
 	if (args.size & 1)
 	{
-		printLn("^3[nextmap]^7 ^1sv_mapRotation: Invalid Syntax. Uneven number of arguments.");
+		printLnConsole("^3[nextmap]^7 ^1sv_mapRotation: Invalid Syntax. Uneven number of arguments.");
 		return;
 	}
 
@@ -248,7 +248,7 @@ parseRotationString(str)
 			case "gametype":
 				if (!isValidGameType(value))
 				{
-					printLn("^3[nextmap]^7 ^1sv_mapRotation: Unknown gametype specified: " + value);
+					printLnConsole("^3[nextmap]^7 ^1sv_mapRotation: Unknown gametype specified: " + value);
 					return;
 				}
 
@@ -259,7 +259,7 @@ parseRotationString(str)
 			case "map":
 				if (!mapExists(value))
 				{
-					printLn("^3[nextmap]^7 ^1sv_mapRotation: Unknown map specified: " + value);
+					printLnConsole("^3[nextmap]^7 ^1sv_mapRotation: Unknown map specified: " + value);
 					return;
 				}
 
@@ -283,7 +283,7 @@ parseRotationString(str)
 				break;
 
 			default:
-				printLn("^3[nextmap]^7 ^1sv_mapRotation: Invalid Syntax. \"map\" or \"gametype\" missing or misspelled.");
+				printLnConsole("^3[nextmap]^7 ^1sv_mapRotation: Invalid Syntax. \"map\" or \"gametype\" missing or misspelled.");
 				return;
 		}
 	}
@@ -304,7 +304,7 @@ parseRotationPlayercounts(defs, str)
 
 		if (configArray.size != 2)
 		{
-			printLn("^3[nextmap]^7 ^1sv_mapRotation_playercounts: Invalid Syntax. Must have 2 arguments per map (<mapname> <min>-<max>).");
+			printLnConsole("^3[nextmap]^7 ^1sv_mapRotation_playercounts: Invalid Syntax. Must have 2 arguments per map (<mapname> <min>-<max>).");
 			continue;
 		}
 
@@ -315,7 +315,7 @@ parseRotationPlayercounts(defs, str)
 
 		if (minMaxArray.size != 2)
 		{
-			printLn("^3[nextmap]^7 ^1sv_mapRotation_playercounts: Invalid Syntax. Must have min and max player counts separated by \"-\" (<min>-<max>).");
+			printLnConsole("^3[nextmap]^7 ^1sv_mapRotation_playercounts: Invalid Syntax. Must have min and max player counts separated by \"-\" (<min>-<max>).");
 			continue;
 		}
 
@@ -330,11 +330,11 @@ printDefinitions(defs)
 {
 	if (defs.size == 0)
 	{
-		printLn("^3[nextmap]^7 No map rotation configured.");
+		printLnConsole("^3[nextmap]^7 No map rotation configured.");
 		return;
 	}
 
-	printLn("^3[nextmap]^7 Configured map rotation:");
+	printLnConsole("^3[nextmap]^7 Configured map rotation:");
 	foreach (def in defs)
 	{
 		gametypesStr = "";
@@ -349,7 +349,7 @@ printDefinitions(defs)
 		if (isDefined(def.minPlayers) && isDefined(def.maxPlayers))
 			playercountStr = " (" + def.minPlayers + "-" + def.maxPlayers + " players)";
 
-		printLn("^3[nextmap]^7 " + def.map + gametypesStr + playercountStr);
+		printLnConsole("^3[nextmap]^7 " + def.map + gametypesStr + playercountStr);
 	}
-	printLn("-----------------------------------");
+	printLnConsole("-----------------------------------");
 }
