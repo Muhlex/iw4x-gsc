@@ -17,6 +17,12 @@ cmd(args, prefix)
 		return;
 	}
 
+	if (target == self)
+	{
+		self respond("^1You cannot kick yourself.");
+		return;
+	}
+
 	execStr = "clientkick " + target getEntityNumber();
 	if (isDefined(reason))
 		execStr += " \"" + reason + "\"";

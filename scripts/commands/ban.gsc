@@ -17,6 +17,12 @@ cmd(args, prefix)
 		return;
 	}
 
+	if (target == self)
+	{
+		self respond("^1You cannot ban yourself.");
+		return;
+	}
+
 	execStr = "banclient " + target getEntityNumber();
 	if (isDefined(reason))
 		execStr += " \"" + reason + "\"";
