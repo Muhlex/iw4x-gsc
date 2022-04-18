@@ -5,6 +5,7 @@ init()
 	setDvarIfUninitialized("scr_permissions", "");
 	setDvarIfUninitialized("scr_commands_prefix", "!");
 	setDvarIfUninitialized("scr_commands_info", getDvar("sv_motd"));
+	setDvarIfUninitialized("scr_commands_report_cooldown", 20);
 	setDvarIfUninitialized("scr_commands_report_webhook_url", "");
 
 	precacheShader("objpoint_default");

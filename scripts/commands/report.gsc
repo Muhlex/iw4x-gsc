@@ -8,6 +8,9 @@ cmd(args, prefix)
 		return;
 	}
 
+	if (!isDefined(self.commands.report))
+		self.commands.report = spawnStruct();
+
 	target = getPlayerByName(args[1]);
 	reason = arrayJoin(arraySlice(args, 2), " ");
 
@@ -20,6 +23,15 @@ cmd(args, prefix)
 	if (target == self)
 	{
 		self respond("^1You cannot report yourself.");
+		return;
+	}
+
+	cooldownSecs = getDvarInt("scr_commands_report_cooldown");
+	lastReportTime = coalesce(self.commands.report.lastReportTime, -2147483648);
+
+	if (lastReportTime + (cooldownSecs * 1000) > getTime())
+	{
+		self respond("^1You can only send a report every ^7" + cooldownSecs + " ^1seconds.");
 		return;
 	}
 
@@ -90,5 +102,6 @@ OnRequestResponse(request, targetName)
 		return;
 	}
 
-	self respond("^2Reported " + targetName + "^2.");
+	self respond("^2Reported ^7" + targetName + "^2.");
+	self.commands.report.lastReportTime = getTime();
 }
