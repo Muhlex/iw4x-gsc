@@ -31,7 +31,7 @@ cmd(args, prefix)
 		return;
 	}
 
-	if (item.type == "attachment")
+	if (item.type == "attachment" || item.type == "camo")
 	{
 		weaponName = target getCurrentWeapon();
 
@@ -41,18 +41,30 @@ cmd(args, prefix)
 			return;
 		}
 
-		def = scripts\_items::createWeaponDefByName(weaponName);
-		defPrev = scripts\_items::createWeaponDefByName(weaponName);
+		if (item.type == "attachment")
+		{
+			def = scripts\_items::createWeaponDefByName(weaponName);
+			defPrev = scripts\_items::createWeaponDefByName(weaponName);
 
-		error = def scripts\_items::weaponDefRemoveAttachment(item);
-		if (error) {
-			self respond("^1^7" + item.name + " ^1is not on ^7" + target.name + "^1's ^7" + def.item.name + "^1.");
-			return;
+			error = def scripts\_items::weaponDefRemoveAttachment(item);
+			if (error) {
+				self respond("^1^7" + item.name + " ^1is not on ^7" + target.name + "^1's ^7" + def.item.name + "^1.");
+				return;
+			}
+
+			target scripts\_items::take(defPrev);
+			target scripts\_items::give(def, false, true);
+			self respond("^2Removed ^7" + item.name + " ^2from ^7" + target.name + "^2's ^7" + def.item.name + "^2.");
 		}
-
-		target scripts\_items::take(defPrev);
-		target scripts\_items::give(def, false, true);
-		self respond("^2Removed ^7" + item.name + " ^2from ^7" + target.name + "^2's ^7" + def.item.name + "^2.");
+		else if (item.type == "camo")
+		{
+			def = scripts\_items::createWeaponDefByName(weaponName);
+			target scripts\_items::take(def);
+			target scripts\commands\give::camoRefresh();
+			def scripts\_items::weaponDefSetCamo(undefined);
+			target scripts\_items::give(def, false, true);
+			self respond("^2Removed camo from ^7" + target.name + "^2's ^7" + def.item.name + "^2.");
+		}
 
 		return;
 	}

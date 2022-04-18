@@ -32,7 +32,7 @@ cmd(args, prefix)
 		return;
 	}
 
-	if (item.type == "attachment")
+	if (item.type == "attachment" || item.type == "camo")
 	{
 		weaponName = target getCurrentWeapon();
 
@@ -42,27 +42,39 @@ cmd(args, prefix)
 			return;
 		}
 
-		def = scripts\_items::createWeaponDefByName(weaponName);
-		defPrev = scripts\_items::createWeaponDefByName(weaponName);
+		if (item.type == "attachment")
+		{
+			def = scripts\_items::createWeaponDefByName(weaponName);
+			defPrev = scripts\_items::createWeaponDefByName(weaponName);
 
-		error = def scripts\_items::weaponDefAddAttachment(item);
-		switch (error) {
-			case 0: break;
-			case 1: return;
-			case 2:
-				self respond("^1^7" + target.name + "^1's ^7" + def.item.name + " ^1already has 2 attachments.");
-				return;
-			case 3:
-				self respond("^1^7" + item.name + " ^1not compatible with ^7" + target.name + "^1's ^7" + def.item.name + "^1.");
-				return;
-			default:
-				self respond("^1^7" + item.name + " ^1cannot be combined with ^7" + error.name + " ^1on ^7" + target.name + "^1's ^7" + def.item.name + "^1.");
-				return;
+			error = def scripts\_items::weaponDefAddAttachment(item);
+			switch (error) {
+				case 0: break;
+				case 1: return;
+				case 2:
+					self respond("^1^7" + target.name + "^1's ^7" + def.item.name + " ^1already has 2 attachments.");
+					return;
+				case 3:
+					self respond("^1^7" + item.name + " ^1not compatible with ^7" + target.name + "^1's ^7" + def.item.name + "^1.");
+					return;
+				default:
+					self respond("^1^7" + item.name + " ^1cannot be combined with ^7" + error.name + " ^1on ^7" + target.name + "^1's ^7" + def.item.name + "^1.");
+					return;
+			}
+
+			target scripts\_items::take(defPrev);
+			target scripts\_items::give(def, false, true);
+			self respond("^2Attached ^7" + item.name + " ^2to ^7" + target.name + "^2's ^7" + def.item.name + "^2.");
 		}
-
-		target scripts\_items::take(defPrev);
-		target scripts\_items::give(def, false, true);
-		self respond("^2Attached ^7" + item.name + " ^2to ^7" + target.name + "^2's ^7" + def.item.name + "^2.");
+		else if (item.type == "camo")
+		{
+			def = scripts\_items::createWeaponDefByName(weaponName);
+			target scripts\_items::take(def);
+			target camoRefresh();
+			def scripts\_items::weaponDefSetCamo(item);
+			target scripts\_items::give(def, false, true);
+			self respond("^2Put ^7" + item.name + " ^2on ^7" + target.name + "^2's ^7" + def.item.name + "^2.");
+		}
 
 		return;
 	}
@@ -72,4 +84,28 @@ cmd(args, prefix)
 	target scripts\_items::give(item, replaceOld, switchTo);
 
 	self respond("^2Given ^7" + item.name + " ^2to ^7" + target.name + "^2.");
+}
+
+camoRefresh()
+{
+	self endon("disconnect");
+	self endon("death");
+
+	if (!isAlive(self))
+		return;
+
+	TEMP_WEAPON_NAME = "briefcase_bomb_mp";
+	prevWeaponName = self getCurrentWeapon();
+	hadTempWeapon = self hasWeapon(TEMP_WEAPON_NAME);
+
+	if (!hadTempWeapon)
+		self giveWeapon(TEMP_WEAPON_NAME);
+	self switchToWeaponImmediate(TEMP_WEAPON_NAME);
+
+	wait 0.05;
+
+	if (!hadTempWeapon)
+		self takeWeapon(TEMP_WEAPON_NAME);
+	if (isDefined(prevWeaponName) && prevWeaponName != "" && prevWeaponName != "none")
+		self switchToWeaponImmediate(prevWeaponName);
 }
