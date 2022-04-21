@@ -59,7 +59,7 @@ OnMapLoadTimeout()
 {
 	// The script engine does not run all the time and players can disconnect between map loads.
 	// Thus, clean up the known player list once no one is connecting from the last map anymore.
-	wait 60;
+	wait getDvarInt("sv_connectTimeout");
 
 	guidsPrev = getGUIDs();
 	guids = [];
