@@ -3,6 +3,7 @@
 init()
 {
 	setDvarIfUninitialized("scr_permissions", "");
+	setDvarIfUninitialized("scr_commands_set_client_dvars_chat", false);
 	setDvarIfUninitialized("scr_commands_prefix", "!");
 	setDvarIfUninitialized("scr_commands_info", getDvar("sv_motd"));
 	setDvarIfUninitialized("scr_commands_report_cooldown", 20);
@@ -16,8 +17,10 @@ init()
 	level.commands.commandMap = [];
 
 	registerCommand("help ? commands", scripts\commands\help::cmd, 0, "Display available commands");
-	registerCommand("info contact discord", scripts\commands\info::cmd, 0, "Display server info");
-	registerCommand("report r", scripts\commands\report::cmd, 0, "Report a player");
+	if (getDvar("scr_commands_info") != "")
+	registerCommand("info i contact", scripts\commands\info::cmd, 0, "Display server info");
+	if (getDvar("scr_commands_report_webhook_url") != "")
+		registerCommand("report r", scripts\commands\report::cmd, 0, "Report a player");
 	registerCommand("items", scripts\commands\items::cmd, 10, "Print items for use with other commands");
 	registerCommand("suicide sc", scripts\commands\suicide::cmd, 10, "Kill yourself");
 	registerCommand("fastrestart restart fr", scripts\commands\fastrestart::cmd, 40, "Restart the map");
@@ -50,6 +53,15 @@ OnPlayerConnected()
 		level waittill("connected", player);
 
 		player.commands = spawnStruct();
+
+		if (getDvarInt("scr_commands_set_client_dvars_chat"))
+		{
+			player setClientDvars(
+				"cg_chatTime", 20000, // 12000
+				"cg_hudChatPosition", "5 216", // "5 200"
+				"cg_hudSayPosition", "5 191" // "5 175"
+			);
+		}
 	}
 }
 

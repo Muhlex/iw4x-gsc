@@ -2,5 +2,7 @@
 
 cmd(args, prefix)
 {
-	self respond(getDvar("scr_commands_info"));
+	paragraphs = self scripts\messages::parseMessage(getDvar("scr_commands_info"));
+	foreach (paragraph in paragraphs)
+		self respond(paragraph);
 }

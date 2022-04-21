@@ -1,5 +1,9 @@
 #include scripts\_utility;
 
+PRINT_ALL = 0;
+PRINT_SELF = 1;
+PRINT_ALL_BUT_SELF = 2;
+
 init()
 {
 	setDvarIfUninitialized("scr_message_welcome", "");
@@ -18,7 +22,7 @@ OnPlayerJoined()
 
 		player thread OnPlayerFirstSpawned();
 
-		player printMessageJoin();
+		player printMessage(getDvar("scr_message_join"), PRINT_ALL_BUT_SELF);
 	}
 }
 
@@ -26,7 +30,7 @@ OnPlayerFirstSpawned()
 {
 	self waittill("spawned_player");
 
-	self printMessageWelcome();
+	self printMessage(getDvar("scr_message_welcome"), PRINT_SELF);
 }
 
 OnPlayerLeft()
@@ -36,37 +40,34 @@ OnPlayerLeft()
 		level waittill("_lifecycle__left", delayedNotify, player);
 		if (delayedNotify) continue;
 
-		player printMessageLeave();
+		player printMessage(getDvar("scr_message_leave"), PRINT_ALL);
 	}
 }
 
-printMessageWelcome()
+printMessage(msg, mode)
 {
-	msg = getDvar("scr_message_welcome");
-	if (msg == "") return;
+	mode = coalesce(mode, PRINT_ALL);
+	if (!isDefined(msg) || msg == "") return;
 
-	foreach (paragraph in self parseMessage(msg))
-		self printChat(paragraph);
-}
+	paragraphs = self parseMessage(msg);
 
-printMessageJoin()
-{
-	msg = getDvar("scr_message_join");
-	if (msg == "") return;
-
-	foreach (paragraph in self parseMessage(msg))
-		foreach (player in level.players)
-			if (player != self)
-				player printChat(paragraph);
-}
-
-printMessageLeave()
-{
-	msg = getDvar("scr_message_leave");
-	if (msg == "") return;
-
-	foreach (paragraph in self parseMessage(msg))
-		level printChat(paragraph);
+	if (mode == PRINT_ALL)
+	{
+		foreach (paragraph in paragraphs)
+			level printChat(paragraph);
+	}
+	else if (mode == PRINT_SELF)
+	{
+		foreach (paragraph in paragraphs)
+			self printChat(paragraph);
+	}
+	else if (mode == PRINT_ALL_BUT_SELF)
+	{
+		foreach (paragraph in paragraphs)
+			foreach (player in level.players)
+				if (player != self)
+					player printChat(paragraph);
+	}
 }
 
 parseMessage(msg)

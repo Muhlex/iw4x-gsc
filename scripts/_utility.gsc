@@ -270,15 +270,15 @@ stringSplit(str, delim)
 		return array;
 	}
 
-	if (delim.size == 1)
-	{
-		array = strTok(str, delim);
-		if (stringStartsWith(str, delim))
-			array = arrayInsert(array, "", 0);
-		if (stringEndsWith(str, delim))
-			array[array.size] = "";
-		return array;
-	}
+	// if (delim.size == 1)
+	// {
+	// 	array = strTok(str, delim);
+	// 	if (stringStartsWith(str, delim))
+	// 		array = arrayInsert(array, "", 0);
+	// 	if (stringEndsWith(str, delim))
+	// 		array[array.size] = "";
+	// 	return array;
+	// }
 
 	strChars = [];
 	delimChars = [];
