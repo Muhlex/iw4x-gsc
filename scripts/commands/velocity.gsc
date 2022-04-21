@@ -37,7 +37,8 @@ cmd(args, prefix)
 		return;
 	}
 
-	switch (args.size) {
+	switch (args.size)
+	{
 		case 2:
 			z = int(args[1]);
 			break;

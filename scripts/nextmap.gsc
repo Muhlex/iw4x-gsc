@@ -244,7 +244,8 @@ parseRotationString(str)
 		key = args[i];
 		value = args[i + 1];
 
-		switch (key) {
+		switch (key)
+		{
 			case "gametype":
 				if (!isValidGameType(value))
 				{

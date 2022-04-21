@@ -226,7 +226,8 @@ parseFilterLists(items, itemTypes, listTypes)
 			names = strTok(getDvar("scr_randomizer_" + listType + "_" + itemType), " ");
 			if (names.size == 0) continue;
 
-			switch (listType) {
+			switch (listType)
+			{
 				case "blacklist":
 					foreach (name in names)
 						if (isDefined(items[itemType][name]))

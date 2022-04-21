@@ -48,7 +48,8 @@ cmd(args, prefix)
 			defPrev = scripts\_items::createWeaponDefByName(weaponName);
 
 			error = def scripts\_items::weaponDefAddAttachment(item);
-			switch (error) {
+			switch (error)
+			{
 				case 0: break;
 				case 1: return;
 				case 2:

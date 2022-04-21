@@ -179,7 +179,8 @@ give(itemOrDef, replaceOld, switchTo)
 	if (item.name == "specialty_tacticalinsertion")
 		weaponName = "flare_mp";
 
-	switch (item.type) {
+	switch (item.type)
+	{
 		case "weapon":
 			self maps\mp\_utility::_giveWeapon(weaponName, def.camo.id);
 
@@ -229,7 +230,8 @@ take(itemOrDef)
 		weaponName = "flare_mp";
 	wasActive = (self getCurrentWeapon() == weaponName);
 
-	switch (item.type) {
+	switch (item.type)
+	{
 		case "weapon":
 			self takeWeapon(weaponName);
 			break;
@@ -272,7 +274,8 @@ has(itemOrDef)
 	if (item.name == "specialty_tacticalinsertion")
 		weaponName = "flare_mp";
 
-	switch (item.type) {
+	switch (item.type)
+	{
 		case "weapon":
 			return self hasWeapon(weaponName);
 
@@ -396,7 +399,8 @@ parsePerkTable(items, path)
 		iString = tableLookupIString(path, 1, name, 2);
 		iStringDesc = tableLookupIString(path, 1, name, 4);
 
-		switch (type) {
+		switch (type)
+		{
 			case "perk1":
 			case "perk2":
 			case "perk3":
@@ -490,7 +494,8 @@ parseStatsTable(items, path)
 		iStringDesc = tableLookupIString(path, 4, name, 7);
 		name += "_mp";
 
-		switch (weaponInventoryType(name)) {
+		switch (weaponInventoryType(name))
+		{
 			case "primary":
 				weapon = spawnStruct();
 				weapon.name = name;
@@ -640,7 +645,8 @@ printItemLine(itemOrStr, i)
 		s2 = ternary(item.custom, "^6Custom", item.iString);
 		s3 = ": ^5" + item.name;
 
-		switch (item.type) {
+		switch (item.type)
+		{
 			case "weapon":
 				attStr = "";
 				foreach (attachment in item.validAttachments)
