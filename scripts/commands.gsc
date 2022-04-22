@@ -3,13 +3,15 @@
 init()
 {
 	setDvarIfUninitialized("scr_permissions", "");
+	setDvarIfUninitialized("scr_commands_enable", false);
 	setDvarIfUninitialized("scr_commands_set_client_dvars_chat", false);
 	setDvarIfUninitialized("scr_commands_prefix", "!");
 	setDvarIfUninitialized("scr_commands_info", getDvar("sv_motd"));
 	setDvarIfUninitialized("scr_commands_report_cooldown", 20);
 	setDvarIfUninitialized("scr_commands_report_webhook_url", "");
 
-	precacheShader("objpoint_default");
+	if (!getDvarInt("scr_commands_enable"))
+		return;
 
 	level.commands = spawnStruct();
 	level.commands.permsMap = parsePermissions(getDvar("scr_permissions"));
@@ -39,6 +41,7 @@ init()
 	registerCommand("spawnbot sb", scripts\commands\spawnbot::cmd, 70, "Spawn a number of bots");
 	registerCommand("kick", scripts\commands\kick::cmd, 80, "Kick a client from the server");
 	registerCommand("ban", scripts\commands\ban::cmd, 90, "Permanently ban a client from the server");
+	registerCommand("dvar", scripts\commands\dvar::cmd, 100, "Get or set a dvar value");
 	registerCommand("rcon", scripts\commands\rcon::cmd, 100, "Execute rcon command");
 	registerCommand("quit exit", scripts\commands\quit::cmd, 100, "Close the server");
 
