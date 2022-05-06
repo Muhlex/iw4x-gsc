@@ -26,6 +26,12 @@ cmd(args, prefix)
 		return;
 	}
 
+	if (target isBot())
+	{
+		self respond("^1You cannot report AI players.");
+		return;
+	}
+
 	cooldownSecs = getDvarInt("scr_commands_report_cooldown");
 	lastReportTime = coalesce(self.commands.report.lastReportTime, -2147483648);
 
@@ -35,6 +41,10 @@ cmd(args, prefix)
 		return;
 	}
 
+	self.commands.report.lastReportTime = getTime();
+
+	waittillframeend; // wait for chat log tracking of the current command
+
 	json = "" +
 "{" +
 	"\"embeds\": [" +
@@ -43,12 +53,12 @@ cmd(args, prefix)
 					"\"name\": \"" + stringRemoveColors(self.name) + " (" + self.guid + ")\"" +
 			"}," +
 			"\"title\": \"Player Report\"," +
-			"\"description\": \"" + ternary(reason.size > 0, "**Reason:** " + reason, "*No reason provided.*") + "\"," +
+			"\"description\": \"" + ternary(reason.size > 0, "**Reason:** " + esc(reason), "*No reason provided.*") + "\"," +
 			"\"color\": 15735344," +
 			"\"fields\": [" +
 				"{" +
 					"\"name\": \"Name\"," +
-					"\"value\": \"" + stringRemoveColors(target.name) + "\"," +
+					"\"value\": \"" + esc(target.name) + "\"," +
 					"\"inline\": true" +
 				"}," +
 				"{" +
@@ -60,10 +70,15 @@ cmd(args, prefix)
 					"\"name\": \"IP Address\"," +
 					"\"value\": \"" + target getIP() + "\"," +
 					"\"inline\": true" +
+				"}," +
+				"{" +
+					"\"name\": \"Recent Chat History\"," +
+					"\"value\": \"" + getChatLogStr() + "\"," +
+					"\"inline\": false" +
 				"}" +
 			"]," +
 			"\"footer\": {" +
-				"\"text\": \"" + stringRemoveColors(getDvar("sv_hostname")) + "\"" +
+				"\"text\": \"" + esc(getDvar("sv_hostname")) + "\"" +
 			"}," +
 			"\"timestamp\": \"%ISODATE%\"" +
 		"}" +
@@ -103,5 +118,26 @@ OnRequestResponse(request, targetName)
 	}
 
 	self respond("^2Reported ^7" + targetName + "^2.");
-	self.commands.report.lastReportTime = getTime();
+}
+
+getChatLogStr()
+{
+	log = scripts\_log::getChatLog();
+
+	str = "";
+	time = getTime();
+	maxAge = getDvarInt("scr_commands_report_chat_log_max_age");
+	for (i = log.size - 1; i >= 0; i--)
+	{
+		msg = log[i];
+		if (msg.systemTime + maxAge < getSystemTime())
+			break;
+		str = "<t:" + msg.systemTime + ":t> **" + esc(msg.name) + ":** " + esc(msg.text) + "\\n" + str;
+	}
+	return ternary(str != "", getSubStr(str, 0, str.size - 2), "-");
+}
+
+esc(str)
+{
+	return stringEncodeJSON(stringEncodeDiscord(stringRemoveColors(str)));
 }
