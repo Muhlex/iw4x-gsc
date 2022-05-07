@@ -39,6 +39,7 @@ init()
 	registerCommand("freelook fly", scripts\commands\freelook::cmd, 50, "Temporary freelook spectating");
 	registerCommand("spectate spec spy", scripts\commands\spectate::cmd, 50, "Quietly spectate target");
 	registerCommand("esp wallhack wh", scripts\commands\esp::cmd, 50, "Show players through walls");
+	registerCommand("vision vis", scripts\commands\vision::cmd, 50, "Set or reset a player's vision");
 	registerCommand("spawnbot sb", scripts\commands\spawnbot::cmd, 70, "Spawn a number of bots");
 	registerCommand("kick", scripts\commands\kick::cmd, 80, "Kick a client from the server");
 	registerCommand("ban", scripts\commands\ban::cmd, 90, "Permanently ban a client from the server");
