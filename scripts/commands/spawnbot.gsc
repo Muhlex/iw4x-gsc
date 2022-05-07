@@ -2,7 +2,7 @@
 
 cmd(args, prefix)
 {
-	count = coalesce(int(args[1]), 1);
+	count = int(coalesce(args[1], 1));
 
 	if (count < 1)
 	{

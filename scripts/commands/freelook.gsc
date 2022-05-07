@@ -54,7 +54,7 @@ setFreelook()
 
 unsetFreelook()
 {
-	if (!coalesce(self.commands.freelook.active, false))
+	if (!isDefined(self.commands.freelook) || !coalesce(self.commands.freelook.active, false))
 		return;
 
 	self maps\mp\gametypes\_spectating::setSpectatePermissions();

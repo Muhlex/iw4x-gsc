@@ -53,7 +53,7 @@ sendWebhookPlayerConnect(newPlayer)
 				"}" +
 			"]," +
 			"\"footer\": {" +
-				"\"text\": \"" + stringRemoveColors(getDvar("sv_hostname")) + "\"" +
+				"\"text\": \"" + esc(getDvar("sv_hostname")) + "\"" +
 			"}," +
 			"\"timestamp\": \"%ISODATE%\"" +
 		"}" +
@@ -73,7 +73,7 @@ sendWebhookServerEmpty()
 			"\"description\": \"Party's over! " + scripts\_http::emoji("new moon face") + "\"," +
 			"\"color\": 16543359," +
 			"\"footer\": {" +
-				"\"text\": \"" + stringRemoveColors(getDvar("sv_hostname")) + "\"" +
+				"\"text\": \"" + esc(getDvar("sv_hostname")) + "\"" +
 			"}," +
 			"\"timestamp\": \"%ISODATE%\"" +
 		"}" +
@@ -123,7 +123,12 @@ buildPlayerList(newPlayer)
 		newPrefix = "";
 		if (isDefined(newPlayer) && player == newPlayer)
 			newPrefix = scripts\_http::emoji("new button") + " ";
-		str += newPrefix + player.name + "\\n";
+		str += newPrefix + esc(player.name) + "\\n";
 	}
-	return stringRemoveColors(str);
+	return str;
+}
+
+esc(str)
+{
+	return stringEncodeJSON(stringEncodeDiscord(stringRemoveColors(str)));
 }

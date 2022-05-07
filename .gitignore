@@ -5,5 +5,7 @@ logs/
 images/
 **/*.iwd
 
+*.cfg
 bots.txt
 missingasset.csv
+bans.json

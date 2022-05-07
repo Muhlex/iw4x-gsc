@@ -58,7 +58,7 @@ OnPlayerWeaponChanged()
 	{
 		self waittill("weapon_change", weaponName);
 
-		if (mode != INFINITE_MODES.NONE) {
+		if (mode != INFINITE_MODES.NONE && isDefined(weaponName) && weaponName != "none") {
 			self setWeaponAmmoStockToClipsize(weaponName);
 		}
 	}

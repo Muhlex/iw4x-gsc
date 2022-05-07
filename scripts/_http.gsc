@@ -117,13 +117,16 @@ stringEncodeURI(str)
 	for (i = 0; i < str.size; i++)
 	{
 		letter = str[i];
-		nextLetter = str[i + 1];
 
-		if (isDefined(nextLetter) && letter == "%" && nextLetter == "%")
+		if (i < str.size - 1)
 		{
-			result += letter;
-			i++;
-			continue;
+			nextLetter = str[i + 1];
+			if (letter == "%" && nextLetter == "%")
+			{
+				result += letter;
+				i++;
+				continue;
+			}
 		}
 
 		if (isDefined(map[letter]))

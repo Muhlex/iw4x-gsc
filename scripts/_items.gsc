@@ -169,20 +169,23 @@ give(itemOrDef, replaceOld, switchTo)
 
 	if (isDefined(item.customGive))
 	{
-		self [[item.customGive]](item, def);
+		self [[item.customGive]]();
 		return;
 	}
 
 	if (!isDefined(item.type)) return;
 
-	weaponName = coalesce(def.fullName, item.name);
+	weaponName = coalesce(itemOrDef.fullName, itemOrDef.name);
 	if (item.name == "specialty_tacticalinsertion")
 		weaponName = "flare_mp";
 
 	switch (item.type)
 	{
 		case "weapon":
-			self maps\mp\_utility::_giveWeapon(weaponName, def.camo.id);
+			camoID = 0;
+			if (isDefined(def) && isDefined(def.camo))
+				camoID = def.camo.id;
+			self maps\mp\_utility::_giveWeapon(weaponName, camoID);
 
 			if (self hasPerk("specialty_extraammo", true) && item.class != "projectile")
 				self giveMaxAmmo(weaponName);
@@ -219,13 +222,13 @@ take(itemOrDef)
 
 	if (isDefined(item.customTake))
 	{
-		self [[item.customTake]](item, def);
+		self [[item.customTake]]();
 		return;
 	}
 
 	if (!isDefined(item.type)) return;
 
-	weaponName = coalesce(def.fullName, item.name);
+	weaponName = coalesce(itemOrDef.fullName, itemOrDef.name);
 	if (item.name == "specialty_tacticalinsertion")
 		weaponName = "flare_mp";
 	wasActive = (self getCurrentWeapon() == weaponName);
@@ -238,24 +241,31 @@ take(itemOrDef)
 
 		case "equipment":
 			self setOffhandPrimaryClass("other");
-			self maps\mp\_utility::_unsetPerk(item.name);
+			if (maps\mp\_utility::_hasPerk(item.name))
+				self maps\mp\_utility::_unsetPerk(item.name);
 			if (self hasWeapon(weaponName))
 				self takeWeapon(weaponName);
 			break;
 
 		case "offhand":
 			self setOffhandSecondaryClass("smoke");
-			self takeWeapon(weaponName);
+			if (self hasWeapon(weaponName))
+				self takeWeapon(weaponName);
 			break;
 
 		case "perk":
 		case "deathstreak":
-			self maps\mp\_utility::_unsetPerk(item.name);
+			if (maps\mp\_utility::_hasPerk(item.name))
+				self maps\mp\_utility::_unsetPerk(item.name);
 			break;
 	}
 
 	if (wasActive)
-		self switchToWeaponImmediate(self getWeaponsListPrimaries()[0]);
+	{
+		firstWeapon = self getWeaponsListPrimaries()[0];
+		if (isDefined(firstWeapon))
+			self switchToWeaponImmediate(firstWeapon);
+	}
 }
 
 has(itemOrDef)
@@ -265,12 +275,12 @@ has(itemOrDef)
 
 	if (isDefined(item.customHas))
 	{
-		return self [[item.customHas]](item, def);
+		return self [[item.customHas]]();
 	}
 
 	if (!isDefined(item.type)) return;
 
-	weaponName = coalesce(def.fullName, item.name);
+	weaponName = coalesce(itemOrDef.fullName, itemOrDef.name);
 	if (item.name == "specialty_tacticalinsertion")
 		weaponName = "flare_mp";
 
@@ -291,7 +301,7 @@ has(itemOrDef)
 	}
 }
 
-// When printing to clients, this is not synchronous!
+// This is not synchronous!
 printItems(items)
 {
 	items = coalesce(items, getItems());
@@ -631,15 +641,18 @@ printItemLine(itemOrStr, i)
 	s3 = undefined;
 
 	if (isString(itemOrStr))
-	{
 		s1 = itemOrStr;
-	}
 	else
 	{
 		item = itemOrStr;
 
-		perkIdentifier = ternary(item.type == "perk", " " + item.tier, "");
-		perkIdentifier += ternary(item.type == "perk" && isDefined(item.base), " upgrade", "");
+		perkIdentifier = "";
+		if (item.type == "perk")
+		{
+			perkIdentifier += " " + item.tier;
+			if (isDefined(item.base))
+				perkIdentifier += " upgrade";
+		}
 		s1 = "^3[" + item.type + perkIdentifier + "] ^4";
 		// Disable localized strings for custom items as they may not be real ones:
 		s2 = ternary(item.custom, "^6Custom", item.iString);
@@ -690,15 +703,15 @@ printItemLine(itemOrStr, i)
 	}
 	else
 	{
-		if (isDefined(s3)) printLnConsole(s1, s2, s3);
-		else if (isDefined(s2)) printLnConsole(s1, s2);
-		else if (isDefined(s1)) printLnConsole(s1);
+		if (isDefined(s3)) iPrintLn(s1, s2, s3);
+		else if (isDefined(s2)) iPrintLn(s1, s2);
+		else if (isDefined(s1)) iPrintLn(s1);
 	}
 
 	if (isDefined(i))
 	{
 		if (i % 8 == 7)
-			wait 0.05;
+			wait 0.1;
 
 		return i + 1;
 	}

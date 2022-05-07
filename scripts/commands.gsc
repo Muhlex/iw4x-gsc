@@ -81,6 +81,7 @@ OnPlayerSay()
 
 		textNoPrefix = getSubStr(text, prefix.size, text.size);
 		args = strTok(textNoPrefix, " ");
+		args[0] = coalesce(args[0], "");
 		args[0] = toLower(args[0]);
 		cmd = level.commands.commandMap[args[0]];
 

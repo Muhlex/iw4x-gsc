@@ -32,16 +32,44 @@ waittillAny(a1, a2, a3, a4, a5, a6, a7, a8)
 	level waittill("eternity");
 }
 
-runAfterDelay(func, delay, a1, a2, a3, a4, a5, a6, a7, a8)
+// Useful for calling a function when not knowing the amount of parameters
+// without raising a script runtime error for passing too many.
+callFunc(func, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)
 {
-	wait delay;
-	self [[func]](a1, a2, a3, a4, a5, a6, a7, a8);
+	if (isDefined(a10))
+		return self [[func]](a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+	if (isDefined(a9))
+		return self [[func]](a1, a2, a3, a4, a5, a6, a7, a8, a9);
+	if (isDefined(a8))
+		return self [[func]](a1, a2, a3, a4, a5, a6, a7, a8);
+	if (isDefined(a7))
+		return self [[func]](a1, a2, a3, a4, a5, a6, a7);
+	if (isDefined(a6))
+		return self [[func]](a1, a2, a3, a4, a5, a6);
+	if (isDefined(a5))
+		return self [[func]](a1, a2, a3, a4, a5);
+	if (isDefined(a4))
+		return self [[func]](a1, a2, a3, a4);
+	if (isDefined(a3))
+		return self [[func]](a1, a2, a3);
+	if (isDefined(a2))
+		return self [[func]](a1, a2);
+	if (isDefined(a1))
+		return self [[func]](a1);
+
+	return self [[func]]();
 }
 
-runAfterEvent(func, event, a1, a2, a3, a4, a5, a6, a7, a8)
+callAfterDelay(func, delay, a1, a2, a3, a4, a5, a6, a7, a8)
+{
+	wait delay;
+	self callFunc(func, a1, a2, a3, a4, a5, a6, a7, a8);
+}
+
+callAfterEvent(func, event, a1, a2, a3, a4, a5, a6, a7, a8)
 {
 	self waittill(event);
-	self [[func]](a1, a2, a3, a4, a5, a6, a7, a8);
+	self callFunc(func, a1, a2, a3, a4, a5, a6, a7, a8);
 }
 
 isPartyServer()
@@ -55,6 +83,11 @@ isDedicatedServer()
 	// return (getDvar("r_useD3D9Ex").size == 0);
 }
 
+isBot()
+{
+	return isBotGUID(self.guid);
+}
+
 isBotGUID(guid)
 {
 	return (stringStartsWith(guid, "bot") && guid.size < 16);
@@ -62,6 +95,9 @@ isBotGUID(guid)
 
 isEnemy(player)
 {
+	if (!isDefined(player.team) || !isDefined(self.team))
+		return false;
+
 	if (self.team != "allies" && self.team != "axis")
 		return false;
 
@@ -76,6 +112,9 @@ isEnemy(player)
 
 isTeammate(player)
 {
+	if (!isDefined(player.team) || !isDefined(self.team))
+		return false;
+
 	if (self.team != "allies" && self.team != "axis")
 		return false;
 
@@ -86,11 +125,6 @@ isTeammate(player)
 		return false;
 
 	return (player.team == self.team);
-}
-
-isArray(var)
-{
-	return isDefined(getArrayKeys(var).size);
 }
 
 arrayContains(array, item)
@@ -204,7 +238,7 @@ arrayJoin(array, delim)
 arrayFind(array, func, a1, a2, a3, a4, a5, a6, a7, a8)
 {
 	foreach (el in array)
-		if (self [[func]](el, a1, a2, a3, a4, a5, a6, a7, a8))
+		if (self callFunc(func, el, a1, a2, a3, a4, a5, a6, a7, a8))
 			return el;
 	return undefined;
 }
@@ -218,9 +252,11 @@ arrayFindRecursive(array, func, a1, a2, a3, a4, a5, a6, a7, a8)
 			result = self arrayFindRecursive(el, func, a1, a2, a3, a4, a5, a6, a7, a8);
 			if (isDefined(result)) return result;
 		}
-
-		if (self [[func]](el, a1, a2, a3, a4, a5, a6, a7, a8))
-			return el;
+		else
+		{
+			if (self callFunc(func, el, a1, a2, a3, a4, a5, a6, a7, a8))
+				return el;
+		}
 	}
 	return undefined;
 }
@@ -230,7 +266,7 @@ arrayFilter(array, func, a1, a2, a3, a4, a5, a6, a7, a8)
 	result = [];
 
 	foreach (el in array)
-		if (self [[func]](el, a1, a2, a3, a4, a5, a6, a7, a8))
+		if (self callFunc(func, el, a1, a2, a3, a4, a5, a6, a7, a8))
 			result[result.size] = el;
 
 	return result;
@@ -243,8 +279,50 @@ arrayRunRecursive(array, func, a1, a2, a3, a4, a5, a6, a7, a8)
 		if (isArray(el))
 			self arrayRunRecursive(el, func, a1, a2, a3, a4, a5, a6, a7, a8);
 		else
-			self [[func]](el, a1, a2, a3, a4, a5, a6, a7, a8);
+			self callFunc(func, el, a1, a2, a3, a4, a5, a6, a7, a8);
 	}
+}
+
+arrayIsMap(array)
+{
+	keys = getArrayKeys(array);
+	isMap = false;
+	foreach (key in keys)
+	{
+		if (int(key) + "" != key + "")
+		{
+			isMap = true;
+			break;
+		}
+	}
+	return isMap;
+}
+
+arrayToString(array)
+{
+	isMap = arrayIsMap(array);
+	str = ternary(isMap, "{", "[");
+	foreach (key, value in array)
+	{
+		if (isArray(value))
+			value = arrayToString(value);
+		else if (isString(value))
+			value = "\"" + value + "\"";
+
+		keyStr = key; // don't modify iteration due to changing key
+		if (isMap && isString(keyStr))
+			keyStr = "\"" + keyStr + "\"";
+
+		if (isMap)
+			str += keyStr + ": " + value + ", ";
+		else
+			str += value + ", ";
+	}
+	if (array.size > 0)
+		str = getSubStr(str, 0, str.size - 2);
+	str += ternary(isMap, "}", "]");
+
+	return str;
 }
 
 stringStartsWith(str, startstr)
@@ -337,6 +415,27 @@ stringRemoveColors(str)
 	return result;
 }
 
+stringEncodeDiscord(str)
+{
+	chars = [];
+	chars[0] = "\\"; // Must be first!
+	chars[1] = "_";
+	chars[2] = "*";
+	chars[3] = "|";
+	chars[4] = "~";
+	chars[5] = "`";
+
+	foreach (char in chars)
+		str = arrayJoin(stringSplit(str, char), "\\" + char);
+
+	return str;
+}
+
+stringEncodeJSON(str)
+{
+	return arrayJoin(stringSplit(str, "\\"), "\\\\");
+}
+
 pow(base, exponent)
 {
 	return exp(exponent * log(base));
@@ -363,9 +462,30 @@ floatRound(float, digits)
 	return result;
 }
 
-printLnConsole(str)
+printLnConsole(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)
 {
-	printConsole(str + "\n");
+	if (isDefined(a10))
+		printConsole(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, "\n");
+	else if (isDefined(a9))
+		printConsole(a1, a2, a3, a4, a5, a6, a7, a8, a9, "\n");
+	else if (isDefined(a8))
+		printConsole(a1, a2, a3, a4, a5, a6, a7, a8, "\n");
+	else if (isDefined(a7))
+		printConsole(a1, a2, a3, a4, a5, a6, a7, "\n");
+	else if (isDefined(a6))
+		printConsole(a1, a2, a3, a4, a5, a6, "\n");
+	else if (isDefined(a5))
+		printConsole(a1, a2, a3, a4, a5, "\n");
+	else if (isDefined(a4))
+		printConsole(a1, a2, a3, a4, "\n");
+	else if (isDefined(a3))
+		printConsole(a1, a2, a3, "\n");
+	else if (isDefined(a2))
+		printConsole(a1, a2, "\n");
+	else if (isDefined(a1))
+		printConsole(a1, "\n");
+	else
+		printConsole("\n");
 }
 
 // Dedicated server only (IW4X 0.6.1)
@@ -387,7 +507,10 @@ respond(msg)
 	if (isDedicatedServer())
 		self printChat(msg);
 	else
-		self iPrintLn(msg);
+		if (isPlayer(self))
+			self iPrintLn(msg);
+		else
+			iPrintLn(msg);
 }
 
 setWeaponAmmoStockToClipsize(weapon)
@@ -528,7 +651,6 @@ hudDestroyRecursive(elements)
 			element = undefined;
 		}
 	}
-	return [];
 }
 
 hudComputeSizeRecursive()
@@ -646,4 +768,11 @@ circle3D(pos, radius, color, time)
 		else
 			line3D(linePos, nextLinePos, color, time);
 	}
+}
+
+_(var)
+{
+	if (!isDefined(var)) var = "undefined";
+	else if (isArray(var)) var = arrayToString(var);
+	printLn("^0[^1#^3#^2#^5#^4#^6#^0] ^7" + var);
 }

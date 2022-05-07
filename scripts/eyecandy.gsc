@@ -32,6 +32,8 @@ OnPlayerSpawned()
 
 playOpenEyesEffect()
 {
+	self endon("disconnect");
+
 	bars = [];
 	bars[0] = self hudCreateRectangle(640, 240, (0, 0, 0));
 	bars[1] = self hudCreateRectangle(640, 240, (0, 0, 0));

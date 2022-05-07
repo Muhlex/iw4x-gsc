@@ -32,19 +32,20 @@ OnMapFirstInit()
 
 	// always remove dummy buffer maps (e. g. for when randomization is turned off)
 	// expected sv_mapRotationCurrent string: "gametype _null map _null"
-	if (strTok(getDvar("sv_mapRotationCurrent"), " ")[1] == "_null")
+	rotationCurrent = strTok(getDvar("sv_mapRotationCurrent"), " ");
+	if (rotationCurrent.size > 1 && rotationCurrent[1] == "_null")
 		setDvar("sv_mapRotationCurrent", "");
 
 	if (level.nextmap.defs.size == 0) return;
 
 	mapWeights = getWeights("map");
-	foreach (map in level.nextmap.maps)
+	foreach (map in getArrayKeys(mapWeights))
 		mapWeights[map] = mapWeights[map] + 1;
 	mapWeights[getDvar("mapname")] = level.nextmap.afterPickWeight;
 	setWeights("map", mapWeights);
 
 	gametypeWeights = getWeights("gametype");
-	foreach (gametype in level.nextmap.gametypes)
+	foreach (gametype in getArrayKeys(gametypeWeights))
 		gametypeWeights[gametype] = gametypeWeights[gametype] + 1;
 	gametypeWeights[getDvar("g_gametype")] = level.nextmap.afterPickWeight;
 	setWeights("gametype", gametypeWeights);
@@ -80,7 +81,8 @@ OnPlayerDisconnected()
 OnPlayercountChange()
 {
 	if (!level.nextmap.randomize) return;
-	if (mapFitsPlayercount(getNextConfig().map)) return;
+	nextConfig = getNextConfig();
+	if (!isDefined(nextConfig.map) || mapFitsPlayercount(nextConfig.map)) return;
 
 	printLnConsole("^3[nextmap]^7 Currently chosen next map does not fit playercount.");
 	setNextConfig(getRandomConfig());
@@ -150,8 +152,14 @@ getNextConfig()
 	config = spawnStruct();
 	args = strTok(getDvar("sv_mapRotationCurrent"), " ");
 
-	if (args[0] == "map")
+	if (!isDefined(args[0]))
 	{
+		config.gametype = undefined;
+		config.map = undefined;
+	}
+	else if (args[0] == "map")
+	{
+		config.gametype = undefined;
 		config.map = args[1];
 	}
 	else if (args[0] == "gametype")
@@ -196,10 +204,11 @@ getRandomConfig()
 		if (!mapFitsPlayercount(def.map)) continue;
 		maps[maps.size] = def.map;
 	}
+
 	if (maps.size == 0)
 	{
 		printLnConsole("^3[nextmap]^7 ^1No maps defined for current player count.");
-		maps[0] = defs[0].map;
+		maps[0] = defs[getFirstArrayKey(defs)].map;
 	}
 	map = getWeightedRandomItem("map", maps);
 	gametype = getWeightedRandomItem("gametype", defs[map].gametypes);

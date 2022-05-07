@@ -28,4 +28,5 @@ cmd(args, prefix)
 		execStr += " \"" + reason + "\"";
 
 	exec(execStr);
+	level respond("^0^7" + target.name + "^1 was kicked from the server.");
 }

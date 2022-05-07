@@ -2,7 +2,7 @@
 
 cmd(args, prefix)
 {
-	if (args.size < 2 && !isDefined(self.commands.spectate.target))
+	if (args.size < 2 && (!isDefined(self.commands.spectate) || !isDefined(self.commands.spectate.target)))
 	{
 		self respond("^1Usage: " + prefix + args[0] + " <name>");
 		return;
@@ -65,7 +65,7 @@ setSpectate(target)
 
 unsetSpectate()
 {
-	if (!isDefined(self.commands.spectate.target))
+	if (!isDefined(self.commands.spectate) || !isDefined(self.commands.spectate.target))
 		return;
 
 	self maps\mp\gametypes\_spectating::setSpectatePermissions();

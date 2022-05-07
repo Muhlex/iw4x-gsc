@@ -24,8 +24,7 @@ addItem(items, item)
 	item.custom = true;
 
 	type = item.type;
-	index = coalesce(items[type].size, 0);
-	items[type][index] = item;
+	items[type][item.name] = item;
 	return items;
 }
 

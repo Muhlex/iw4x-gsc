@@ -95,7 +95,6 @@ spawnFire(position, radius, duration, damage, owner, killCamEnt)
 		}
 
 		origins[origins.size] = point.origin;
-		point delete();
 	}
 
 	if (origins.size < 1)
@@ -155,8 +154,6 @@ deleteFire()
 {
 	foreach (trigger in self.triggers)
 		trigger delete();
-	foreach (playerdata in self.players)
-		playerdata delete();
 
 	self.killCamEnt delete();
 
@@ -184,7 +181,7 @@ OnPlayerConnect()
 OnPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc, psOffsetTime)
 {
 	// Prevent stun effect from being applied (and anything else a stun grenade does to players).
-	if (isDefined(eInflictor.isIncendiary) && eInflictor.isIncendiary)
+	if (isDefined(eInflictor) && isDefined(eInflictor.isIncendiary) && eInflictor.isIncendiary)
 	{
 		if (sMeansOfDeath != "MOD_IMPACT")
 			return;

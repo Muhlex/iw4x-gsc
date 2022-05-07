@@ -2,10 +2,9 @@
 
 cmd(args, prefix)
 {
+	target = self;
 	if (isDefined(args[1]))
 		target = getPlayerByName(args[1]);
-	else
-		target = self;
 
 	if (!isDefined(target))
 	{

@@ -17,7 +17,7 @@ init()
 	PERK_UPGRADE_MODES.ALWAYS = 1;
 	PERK_UPGRADE_MODES.IF_UNLOCKED = 2;
 
-	setDvarIfUninitialized("scr_randomizer_enabled", false);
+	setDvarIfUninitialized("scr_randomizer_enable", false);
 	setDvarIfUninitialized("scr_randomizer_mode", LOADOUT_MODES.EVERYONE);
 	setDvarIfUninitialized("scr_randomizer_interval", 0);
 	setDvarIfUninitialized("scr_randomizer_next_preview_time", 5.0);
@@ -35,16 +35,25 @@ init()
 	itemTypes = getArrayKeys(items);
 
 	defaults["blacklist"]["weapon"] = "onemanarmy_mp stinger_mp deserteaglegold_mp ak47classic_mp";
-	defaults["blacklist"]["perk"] = "specialty_bling specialty_onemanarmy";
+	defaults["blacklist"]["perk"] = "specialty_bling specialty_secondarybling specialty_onemanarmy specialty_omaquickcharge";
 	defaults["blacklist"]["deathstreak"] = "specialty_copycat";
 
-	foreach (list in listTypes)
-		foreach (item in itemTypes)
-			setDvarIfUninitialized("scr_randomizer_" + list + "_" + item, coalesce(defaults[list][item], ""));
+	foreach (listType in listTypes)
+	{
+		foreach (itemType in itemTypes)
+		{
+			value = "";
+			if (isDefined(defaults[listType]) && isDefined(defaults[listType][itemType]))
+				value = defaults[listType][itemType];
+			setDvarIfUninitialized("scr_randomizer_" + listType + "_" + itemType, value);
+		}
+	}
 
-	if (!getDvarInt("scr_randomizer_enabled")) return;
+	if (!getDvarInt("scr_randomizer_enable")) return;
 
-	items = parseFilterLists(items, itemTypes, listTypes);
+	foreach (listType in listTypes)
+		foreach (itemType in itemTypes)
+			items = applyFilterList(items, listType, itemType);
 
 	level.randomizer = spawnStruct();
 	level.randomizer.LOADOUT_MODES = LOADOUT_MODES;
@@ -111,7 +120,6 @@ OnPlayerConnected()
 		player.randomizer = spawnStruct();
 		player.randomizer.activeOffhand = undefined;
 		player.randomizer.ui = spawnStruct();
-		player.randomizer.ui.loadout = [];
 
 		player thread OnPlayerDisconnected();
 		player thread OnPlayerChangedKit();
@@ -171,6 +179,8 @@ OnPlayerWeaponSwitchStarted()
 	{
 		self waittill("weapon_switch_started", newWeaponName);
 
+		if (!isDefined(newWeaponName) || newWeaponName == "none") continue;
+
 		if (coalesce(weaponInventoryType(newWeaponName), "") == "offhand")
 			self.randomizer.activeOffhand = newWeaponName;
 		else
@@ -217,35 +227,50 @@ OnLoadoutTimer(interval)
 	level thread OnLoadoutTimer(interval);
 }
 
-parseFilterLists(items, itemTypes, listTypes)
+applyFilterList(items, listType, itemType)
 {
-	foreach (listType in listTypes)
-	{
-		foreach (itemType in itemTypes)
-		{
-			names = strTok(getDvar("scr_randomizer_" + listType + "_" + itemType), " ");
-			if (names.size == 0) continue;
+	names = strTok(getDvar("scr_randomizer_" + listType + "_" + itemType), " ");
+	if (names.size == 0) return items;
 
-			switch (listType)
-			{
-				case "blacklist":
-					foreach (name in names)
-						if (isDefined(items[itemType][name]))
-							items[itemType][name] = undefined;
-					break;
+	assertEx(listType == "blacklist" || listType == "whitelist", "Invalid filter list type: " + listType);
+	func = ternary(listType == "blacklist", ::applyBlacklistForType, ::applyWhitelistForType);
 
-				case "whitelist":
-					newItemsOfType = [];
-					foreach (name in names)
-						if (isDefined(items[itemType][name]))
-							newItemsOfType[name] = items[itemType][name];
-
-					items[itemType] = newItemsOfType;
-			}
-		}
-	}
+	items[itemType] = [[func]](items[itemType], names);
 
 	return items;
+}
+
+applyBlacklistForType(itemsOfType, names)
+{
+	isNested = isArray(itemsOfType[getFirstArrayKey(itemsOfType)]);
+	if (isNested)
+	{
+		foreach (categoryName, category in itemsOfType)
+			itemsOfType[categoryName] = applyBlacklistForType(category, names);
+		return itemsOfType;
+	}
+
+	foreach (name in names)
+		if (isDefined(itemsOfType[name]))
+			itemsOfType[name] = undefined;
+	return itemsOfType;
+}
+
+applyWhitelistForType(itemsOfType, names)
+{
+	isNested = isArray(itemsOfType[getFirstArrayKey(itemsOfType)]);
+	if (isNested)
+	{
+		foreach (categoryName, category in itemsOfType)
+			itemsOfType[categoryName] = applyWhitelistForType(category, names);
+		return itemsOfType;
+	}
+
+	newItemsOfType = [];
+	foreach (name in names)
+		if (isDefined(itemsOfType[name]))
+			newItemsOfType[name] = itemsOfType[name];
+	return newItemsOfType;
 }
 
 pushLoadout()
@@ -258,8 +283,9 @@ pushLoadout()
 	{
 		foreach (key in strTok("everyone allies axis", " "))
 			loadouts[key][loadouts[key].size] = getRandomLoadout();
-		foreach (player in level.players)
-			loadouts[player.guid][loadouts[player.guid].size] = getRandomLoadout();
+		if (isDefined(level.players))
+			foreach (player in level.players)
+				loadouts[player.guid][loadouts[player.guid].size] = getRandomLoadout();
 	}
 
 	level.randomizer.loadouts = loadouts;
@@ -360,13 +386,16 @@ getRandomWeapons(count)
 
 getRandomAttachments(validAttachments, count)
 {
-	rest = validAttachments;
+	rest = [];
+	foreach (a in validAttachments)
+		if (isDefined(level.randomizer.items["attachment"][a.name]))
+			rest[rest.size] = a;
 
 	attachments = [];
 	for (i = 0; i < count; i++)
 	{
 		if (rest.size == 0)
-			continue;
+			break;
 
 		if (i > 0)
 		{
@@ -489,11 +518,16 @@ giveLoadout(loadout, prevLoadout)
 		self takeItemsOnlyPerks(prevLoadout);
 
 	// give perks first because they can influence other items (scavenger pro)
-	self givePerks(loadout.perks, getDvarInt("scr_randomizer_perk_upgrade_mode"));
-	self giveWeapons(loadout.weapons, isSpawn);
-	self giveEquipment(loadout.equipment);
-	self giveOffhand(loadout.offhand);
-	self giveDeathstreak(loadout.deathstreak, isSpawn);
+	if (isDefined(loadout.perks))
+		self givePerks(loadout.perks, getDvarInt("scr_randomizer_perk_upgrade_mode"));
+	if (isDefined(loadout.weapons))
+		self giveWeapons(loadout.weapons, isSpawn);
+	if (isDefined(loadout.equipment))
+		self giveEquipment(loadout.equipment);
+	if (isDefined(loadout.offhand))
+		self giveOffhand(loadout.offhand);
+	if (isDefined(loadout.deathstreak))
+		self giveDeathstreak(loadout.deathstreak, isSpawn);
 
 	self notify("giveLoadout");
 
@@ -560,8 +594,16 @@ giveWeapons(weaponDefs, isSpawn)
 	foreach (weaponDef in weaponDefs)
 		self scripts\_items::give(weaponDef);
 
-	self.primaryWeapon = weaponDefs[0].fullName;
-	self.secondaryWeapon = weaponDefs[1].fullName;
+	if (isDefined(weaponDefs[0]))
+		self.primaryWeapon = weaponDefs[0].fullName;
+	else
+		self.primaryWeapon = "";
+
+	if (isDefined(weaponDefs[1]))
+		self.secondaryWeapon = weaponDefs[1].fullName;
+	else
+		self.secondaryWeapon = "";
+
 	self.isSniper = (coalesce(weaponDefs[0].item.class, "") == "sniper");
 
 	if (isDefined(weaponDefs[0]))
@@ -580,26 +622,22 @@ giveWeapons(weaponDefs, isSpawn)
 
 	self maps\mp\gametypes\_weapons::updateMoveSpeedScale("primary");
 
-	if (isDefined(weaponDefs[0].fullName) && weaponDefs[0].fullName == "riotshield_mp" && level.inGracePeriod)
+	if (isDefined(weaponDefs[0]) && isDefined(weaponDefs[0].fullName) && weaponDefs[0].fullName == "riotshield_mp" && level.inGracePeriod)
 		self notify("weapon_change", "riotshield_mp");
 }
 
 giveEquipment(equipment)
 {
-	if (!isDefined(equipment)) return;
 	self scripts\_items::give(equipment);
 }
 
 giveOffhand(offhand)
 {
-	if (!isDefined(offhand)) return;
 	self scripts\_items::give(offhand);
 }
 
 givePerks(perks, upgradeMode)
 {
-	if (!isDefined(perks)) return;
-
 	foreach (perk in perks.perkList)
 	{
 		self scripts\_items::give(perk);
@@ -619,8 +657,6 @@ doPerkUpgrade(perk, upgradeMode, ignoreHierarchy)
 
 giveDeathstreak(deathstreak, isSpawn)
 {
-	if (!isDefined(deathstreak)) return;
-
 	deathCount = deathstreak.deathCount;
 
 	deathCountOverride = getDvarInt("scr_randomizer_deathstreak_death_count");
@@ -708,10 +744,11 @@ uiIntervalBarOnGameEnded(bar)
 
 uiLoadoutDisplay(loadout, time, upcoming)
 {
-	if (!isDefined(time)) time = 3.0;
-	if (!isDefined(upcoming)) upcoming = false;
+	time = coalesce(time, 3.0);
+	upcoming = coalesce(upcoming, false);
 
-	if (!upcoming && self.randomizer.ui.loadout.size > 0) return;
+	if (!upcoming && isDefined(self.randomizer.ui.loadout))
+		return;
 
 	self uiLoadoutDestroy();
 
@@ -890,7 +927,9 @@ uiLoadoutDisplay(loadout, time, upcoming)
 
 uiLoadoutDestroy()
 {
-	self.randomizer.ui.loadout = hudDestroyRecursive(self.randomizer.ui.loadout);
+	if (isDefined(self.randomizer.ui.loadout))
+		hudDestroyRecursive(self.randomizer.ui.loadout);
+	self.randomizer.ui.loadout = undefined;
 	self notify("randomizer__ui_loadout_destroy");
 }
 

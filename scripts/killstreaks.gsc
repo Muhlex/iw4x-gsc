@@ -31,7 +31,7 @@ OnPlayerLoadoutGiven()
 	{
 		self waittill("giveLoadout");
 
-		self trySetForcedKillstreaks();
+		self setForcedKillstreaks();
 		self giveEarnedPerkStreaks(false);
 	}
 }
@@ -48,12 +48,17 @@ OnPlayerKilledEnemy()
 	}
 }
 
-trySetForcedKillstreaks()
+setForcedKillstreaks()
 {
 	if (!level.killstreakRewards) return;
 	if (!isDefined(level.killstreaks.forcedKillstreaks)) return;
 
-	self.killStreaks = level.killstreaks.forcedKillstreaks;
+	modifier = self getModifier();
+	killStreaks = [];
+	foreach (killcount, streak in level.killstreaks.forcedKillstreaks)
+		killStreaks[killcount + modifier] = streak;
+
+	self.killStreaks = killStreaks;
 }
 
 giveEarnedPerkStreaks(killedEnemy)
@@ -62,9 +67,10 @@ giveEarnedPerkStreaks(killedEnemy)
 
 	currentStreak = self.pers["cur_kill_streak"] - level.killStreakMod;
 	perksGiven = 0;
+	modifier = self getModifier();
 
 	foreach (streakVal, perks in level.killstreaks.perkStreaks)
-		if (currentStreak >= streakVal)
+		if (currentStreak >= streakVal + modifier)
 			foreach(perk in perks)
 				if (!self maps\mp\_utility::_hasPerk(perk))
 				{
@@ -89,10 +95,6 @@ parseStreaks(string, multiplePerKillcount)
 {
 	if (string == "") return undefined;
 
-	modifier = 0;
-	if (self maps\mp\_utility::_hasPerk("specialty_hardline") && (getDvarInt("scr_classic") != 1))
-		modifier = -1;
-
 	streaks = [];
 	rawData = strTok(string, " ");
 
@@ -101,16 +103,28 @@ parseStreaks(string, multiplePerKillcount)
 	// map e.g. ["3", "uav", "4", "counter_uav"] to streaks[3] = "uav"; streaks[4] = "counter_uav"
 	for (i = 0; i < rawData.size; i += 2)
 	{
+		killcount = int(rawData[i]);
+		streak = rawData[i + 1];
 		if (multiplePerKillcount)
 		{
-			index = coalesce(streaks[int(rawData[i]) + modifier].size, 0);
-			streaks[int(rawData[i]) + modifier][index] = rawData[i + 1];
+			index = 0;
+			if (isDefined(streaks[killcount])) index = streaks[killcount].size;
+			streaks[killcount][index] = streak;
 		}
 		else
 		{
-			streaks[int(rawData[i]) + modifier] = rawData[i + 1];
+			streaks[killcount] = streak;
 		}
 	}
 
 	return streaks;
+}
+
+getModifier()
+{
+	modifier = 0;
+	if (self maps\mp\_utility::_hasPerk("specialty_hardline") && (getDvarInt("scr_classic") != 1))
+		modifier = -1;
+
+	return modifier;
 }

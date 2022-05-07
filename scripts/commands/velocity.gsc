@@ -58,8 +58,8 @@ cmd(args, prefix)
 	}
 
 	vel = (x, y, z);
-	self setVelocity(self getVelocity() * (1, 1, 0) + vel);
+	target setVelocity(target getVelocity() * (1, 1, 0) + vel);
 	speed = length(vel);
 	speedMPS = speed * 0.0254;
-	self respond("^2Applied ^7" + floatRound(speedMPS, 2) + " ^2m/s to ^7 " + target.name + "^2.");
+	self respond("^2Applied ^7" + floatRound(speedMPS, 2) + " ^2m/s to ^7" + target.name + "^2.");
 }

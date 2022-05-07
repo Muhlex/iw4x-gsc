@@ -4,7 +4,8 @@ init()
 
 	if (getDvarInt("scr_allow_classchange")) return;
 
-	level.customClassCB = true;
+	level.customClassCB = true; // disables ability to open class menu
+	replaceFunc(maps\mp\gametypes\_menus::beginClassChoice, ::beginClassChoice);
 	level thread OnPlayerConnected();
 }
 
@@ -31,4 +32,15 @@ OnPlayerMenuResponse()
 
 		self iPrintLnBold("Changing classes is ^3disabled^7.");
 	}
+}
+
+beginClassChoice(forceNewChoice)
+{
+	assert(self.pers["team"] == "axis" || self.pers["team"] == "allies");
+
+	if (!isAlive(self))
+		self thread maps\mp\gametypes\_playerlogic::predictAboutToSpawnPlayerOverTime(0.1);
+
+	self.selectedClass = true;
+	self maps\mp\gametypes\_menus::menuClass("class10");
 }
