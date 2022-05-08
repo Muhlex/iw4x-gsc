@@ -224,7 +224,8 @@ mapFitsPlayercount(map)
 	def = level.nextmap.defs[map];
 	count = 0;
 	if (isDefined(level.players)) count = level.players.size;
-	if (!isDefined(def)) return false;
+
+	if (!isDefined(def)) return true;
 	if (isDefined(def.minPlayers) && count < def.minPlayers) return false;
 	if (isDefined(def.maxPlayers) && count > def.maxPlayers) return false;
 	return true;
