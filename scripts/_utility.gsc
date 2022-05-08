@@ -83,11 +83,6 @@ isDedicatedServer()
 	// return (getDvar("r_useD3D9Ex").size == 0);
 }
 
-isBot()
-{
-	return isBotGUID(self.guid);
-}
-
 isBotGUID(guid)
 {
 	return (stringStartsWith(guid, "bot") && guid.size < 16);
@@ -773,6 +768,7 @@ circle3D(pos, radius, color, time)
 _(var)
 {
 	if (!isDefined(var)) var = "undefined";
-	else if (isArray(var)) var = arrayToString(var);
+	else if (isString(var)) var = "\"" + var + "^7\"";
+	else if (isArray(var)) var = arrayToString(var) + "^7";
 	printLn("^0[^1#^3#^2#^5#^4#^6#^0] ^7" + var);
 }
