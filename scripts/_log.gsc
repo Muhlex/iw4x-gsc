@@ -47,7 +47,12 @@ serializeChatLog(array)
 	str = "";
 
 	foreach (msg in array)
-		str += msg.guid + "%" + msg.name + "%" + msg.time + "%" + msg.systemTime + "%" + msg.text + "%";
+	{
+		// Make empty messages a space to prevent strTok from skipping the entry entirely
+		// thus messing up deserialization.
+		text = ternary(msg.text == "", " ", msg.text);
+		str += msg.guid + "%" + msg.name + "%" + msg.time + "%" + msg.systemTime + "%" + text + "%";
+	}
 	str = getSubStr(str, 0, str.size - 1);
 	return str;
 }
