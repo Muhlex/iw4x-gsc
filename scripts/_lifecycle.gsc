@@ -69,7 +69,7 @@ OnMapLoadTimeout()
 
 	foreach (guid in guidsPrev)
 		if (!arrayContains(guids, guid))
-			level notify("_lifecycle__left", true);
+			level notify("_lifecycle__left", true, guid);
 
 	if (guidsPrev.size > 0)
 	{
