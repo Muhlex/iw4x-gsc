@@ -8,17 +8,17 @@ exist on other clients.
 ## 🗺️ Quick Navigation
 <p align="center">
 	<b>
-		<a href="#%EF%B8%8F-chat-command-system">🗯️&thinsp;Commands</a>
+		<a href="#%EF%B8%8F-chat-command-system">🗯️&#8239;Commands</a>
 		•
-		<a href="#-advanced-map-rotation">🔄&thinsp;Advanced Map-Rotation</a>
+		<a href="#-advanced-map-rotation">🔄&#8239;Advanced Map-Rotation</a>
 		•
-		<a href="#-incendiary-grenade">🔥&thinsp;Incendiary</a>
+		<a href="#-incendiary-grenade">🔥&#8239;Incendiary</a>
 		•
-		<a href="#-randomizer-mode">🎲&thinsp;Randomizer</a>
+		<a href="#-randomizer-mode">🎲&#8239;Randomizer</a>
 		•
-		<a href="#-discord-integration">🟣&thinsp;Discord</a>
+		<a href="#-discord-integration">🟣&#8239;Discord</a>
 		•
-		<a href="#-other-tweaks">🧰&thinsp;Tweaks</a>
+		<a href="#-other-tweaks">🧰&#8239;Tweaks</a>
 	</b>
 </p>
 
@@ -99,15 +99,34 @@ Use `sv_mapRotation` to setup map and gamemode combinations as usual, leave the 
 `sv_randomMapRotation` false and refer to the table of related dvars to set up the advanced features:
 	
 ### Related DVars
-| **DVar**                           | Default Value        | Description                                                                                                                                                                                                                |
-|:-----------------------------------|:---------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **scr_nextmap_randomize**          | `false`              | Enable weighted map randomization.                                                                                                                                                                                         |
-| **scr_nextmap_playercounts**       | `""`                 | Pairs of maps and min-max playercounts. Make sure to define maps for playercounts of 0 to `sv_maxclients`! Only used when `scr_nextmap_randomize` is enabled.<br>Example: `"mp_rust 0-3,mp_boneyard 4-8,mp_terminal 5-10"` |
-| **scr_nextmap_map_timeout**        | `1`                  | Once a random map is picked, this amount of other maps must be played until the map is considered again. Make sure to always have enough maps in the pool when increasing this.                                            |
-| **scr_nextmap_empty_switch_delay** | `20`                 | When the server empties and the active map is not configured for 0 players, it will be changed to a map configured for 0 players after this delay (in seconds).                                                            |
+| **DVar**                           | Default Value | Description                                                                                                                                                                                                                |
+|:-----------------------------------|:--------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **scr_nextmap_randomize**          | `false`       | Enable weighted map randomization.                                                                                                                                                                                         |
+| **scr_nextmap_playercounts**       | `""`          | Pairs of maps and min-max playercounts. Make sure to define maps for playercounts of 0 to `sv_maxclients`! Only used when `scr_nextmap_randomize` is enabled.<br>Example: `"mp_rust 0-3,mp_boneyard 4-8,mp_terminal 5-10"` |
+| **scr_nextmap_map_timeout**        | `1`           | Once a random map is picked, this amount of other maps must be played until the map is considered again. Make sure to always have enough maps in the pool when increasing this.                                            |
+| **scr_nextmap_empty_switch_delay** | `20`          | When the server empties and the active map is not configured for 0 players, it will be changed to a map configured for 0 players after this delay (in seconds).                                                            |
 
-## &hairsp;🔥&emsp14; Incendiary Grenade
-## 🎲&thinsp; Randomizer Mode
+## 🔥 Incendiary Grenade
+> Special grenade exploding into a pool of fire on impact.
+
+https://user-images.githubusercontent.com/21311428/168055048-c27cc71d-cb77-438a-a27e-bdf66bf115dc.mp4
+
+Useful for clearing out rooms or blocking off chokepoints. Duration and Damage are configurable.
+Damage and tagging (slowdown on getting hit) scale with the amount of time the fire pool has been burning, allowing targets to react.
+Either dvar `scr_incendiary_replace_offhand` or functions inside of `incendiary.gsc` can be used to give players the grenade.
+Fire pools can also be spawned and deleted programatically.
+
+### Related DVars
+| **DVar**                           | Default Value | Description                                                                                                                                                                                                                                                                                                                                             |
+|:-----------------------------------|:--------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **scr_incendiary_duration**        | `6.0`         | Time in seconds the grenade's fire pool persists for.                                                                                                                                                                                                                                                                                                   |
+| **scr_incendiary_radius**          | `176.0`       | Radius of the grenade's fire pool in inches (in-game units).                                                                                                                                                                                                                                                                                            |
+| **scr_incendiary_damage**          | `50`          | Base damage of the grenade's fire. Exact damage is calculated as follows:<br>`int(min(fireAliveSeconds / 6.0 + 0.4, 1) * (1 - min(distanceTargetFire / scr_incendiary_radius * 2, 1)) * scr_incendiary_damage)`                                                                                                                                         |
+| **scr_incendiary_flame_radius**    | `72`          | Radius (X, Y) of a single flame's damage trigger cylinder. You should not have to change this.                                                                                                                                                                                                                                                          |
+| **scr_incendiary_flame_height**    | `96`          | Height (Z) of a single flame's damage trigger cylinder. You should not have to change this.                                                                                                                                                                                                                                                             |
+| **scr_incendiary_replace_offhand** | `""`          | Space seperated list of special grenades to get replaced by the incendiary grenade. This allows the grenade to be used without any other mod by replacing player's loadouts at the cost of removing a grenade from the base game.<br>Example (causes Stun and Smoke Grenade to be replaced with Incendiary): `"concussion_grenade_mp smoke_grenade_mp"` |
+
+## 🎲 Randomizer Mode
 ## 🟣 Discord Integration
 ## 🧰 Other Tweaks
 ### Infinite Ammo
