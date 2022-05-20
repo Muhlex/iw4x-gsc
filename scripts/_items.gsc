@@ -243,13 +243,13 @@ take(itemOrDef)
 			self setOffhandPrimaryClass("other");
 			if (maps\mp\_utility::_hasPerk(item.name))
 				self maps\mp\_utility::_unsetPerk(item.name);
-			if (self hasWeapon(weaponName))
+			if (!stringStartsWith(weaponName, "specialty_") && self hasWeapon(weaponName))
 				self takeWeapon(weaponName);
 			break;
 
 		case "offhand":
 			self setOffhandSecondaryClass("smoke");
-			if (self hasWeapon(weaponName))
+			if (!stringStartsWith(weaponName, "specialty_") && self hasWeapon(weaponName))
 				self takeWeapon(weaponName);
 			break;
 

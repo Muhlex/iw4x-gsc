@@ -1,5 +1,4 @@
 // TODO: You can somehow very rarely spawn without a weapon?
-// TODO: Make it work with killstreaks.
 // TODO: Make enum things global compiler vars, see maps\mp\gametypes\_teams.gsc
 
 #include scripts\_utility;
@@ -125,6 +124,7 @@ OnPlayerConnected()
 		player thread OnPlayerChangedKit();
 		player thread OnPlayerDeath();
 		player thread OnPlayerWeaponSwitchStarted();
+		player thread OnPlayerStoppedUsingRemote();
 		// player thread OnPlayerDebugKey();
 	}
 }
@@ -187,6 +187,29 @@ OnPlayerWeaponSwitchStarted()
 			self.randomizer.activeOffhand = undefined;
 
 		self thread OnPlayerOffhandEnd();
+	}
+}
+
+OnPlayerStoppedUsingRemote()
+{
+	self endon("disconnect");
+
+	for (;;)
+	{
+		self waittill("stopped_using_remote");
+
+		// Usually the game will always already switch to the previously equipped weapon.
+		// Randomizer can cause that weapon to no longer exist. Thus use this fail-safe.
+		currentWeaponName = self getCurrentWeapon();
+		if (currentWeaponName != "none" && !maps\mp\_utility::isKillstreakWeapon(currentWeaponName))
+			continue;
+		if (self hasWeapon(self common_scripts\utility::getLastWeapon()))
+			continue;
+
+		weaponsListPrimaries = self getWeaponsListPrimaries();
+		if (weaponsListPrimaries.size == 0)
+			continue;
+		self switchToWeapon(weaponsListPrimaries[0]);
 	}
 }
 
@@ -501,9 +524,8 @@ giveLoadout(loadout, prevLoadout)
 		self common_scripts\utility::_disableOffhandWeapons();
 	}
 
-	self takeAllWeapons();
-	if (isDefined(prevLoadout))
-		self takeItemsNoPerks(prevLoadout);
+	foreach (weapon in arrayCombine(self getWeaponsListPrimaries(), self getWeaponsListOffhands()))
+		self takeWeapon(weapon);
 
 	if (isDefined(self.randomizer.activeOffhand))
 	{
@@ -515,7 +537,7 @@ giveLoadout(loadout, prevLoadout)
 	// TI needs the perk to be present, thus clear those after the wait
 	self maps\mp\_utility::_clearPerks();
 	if (isDefined(prevLoadout))
-		self takeItemsOnlyPerks(prevLoadout);
+		self takeItems(prevLoadout);
 
 	// give perks first because they can influence other items (scavenger pro)
 	if (isDefined(loadout.perks))
@@ -557,7 +579,7 @@ OnGiveLoadoutEnd(isSpawn, hadBlastshield)
 	}
 }
 
-takeItemsNoPerks(loadout)
+takeItems(loadout)
 {
 	foreach (weapon in loadout.weapons)
 		self scripts\_items::take(weapon);
@@ -565,10 +587,7 @@ takeItemsNoPerks(loadout)
 	self scripts\_items::take(loadout.equipment);
 	self scripts\_items::take(loadout.offhand);
 	self scripts\_items::take(loadout.deathstreak);
-}
 
-takeItemsOnlyPerks(loadout)
-{
 	foreach (perk in loadout.perks.perkList)
 	{
 		self scripts\_items::take(perk);
@@ -616,7 +635,9 @@ giveWeapons(weaponDefs, isSpawn)
 		}
 		else
 		{
-			self switchToWeapon(weaponDefs[0].fullName);
+			currentWeaponName = self getCurrentWeapon();
+			if (currentWeaponName == "none" || weaponInventoryType(currentWeaponName) == "primary")
+				self switchToWeapon(weaponDefs[0].fullName);
 		}
 	}
 
