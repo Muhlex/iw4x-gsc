@@ -43,44 +43,44 @@ The permission level is set per-player using the [`scr_permissions`](#scr_permis
 
 ### List of available commands
 | **Command**     | Aliases     | Arguments                         | Description                              | Permission<br>Level |
-|:----------------|:------------|:----------------------------------|:-----------------------------------------|-----:|
-| **help**        | ? commands  | [page]                            | Display available commands               | 0    |
-| **info**        | i contact   |                                   | Display server info                      | 0    |
-| **report**      | r           | <name> [reason]                   | Report a player                          | 0    |
-| **items**       |             |                                   | Print items for use with other commands  | 10   |
-| **suicide**     | sc          |                                   | Kill yourself                            | 20   |
-| **fastrestart** | restart fr  |                                   | Restart the map                          | 40   |
-| **maprestart**  | mr          |                                   | Reload and restart the map               | 40   |
-| **map**         |             | <mapname>                         | Change the current map                   | 40   |
-| **kill**        |             | <name>                            | Kill a specified player                  | 50   |
-| **give**        |             | [name] <item>                     | Give an item to a player                 | 50   |
-| **take**        |             | [name] <item>                     | Take an item from a player               | 50   |
-| **teleport**    | tp          | [name] [name]                     | Teleport to players or a location        | 50   |
-| **up**          |             | [name]                            | Teleport upwards                         | 50   |
-| **down**        | dn          | [name]                            | Teleport downwards                       | 50   |
-| **velocity**    | jump j      | [name] <z \| forwards z \| x y z> | Set a player's velocity                  | 50   |
-| **freelook**    | fly         | [name]                            | Temporary freelook spectating            | 50   |
-| **spectate**    | spec spy    | <name>                            | Quietly spectate target                  | 50   |
-| **esp**         | wallhack wh | [name]                            | Show players through walls               | 50   |
-| **vision**      | vis         | [visionfile]                      | Set or reset a player's vision           | 50   |
-| **spawnbot**    | sb          |                                   | Spawn a number of bots                   | 70   |
-| **kick**        |             | <name> [reason]                   | Kick a client from the server            | 80   |
-| **ban**         |             | <name> [reason]                   | Permanently ban a client from the server | 90   |
-| **dvar**        |             | <dvar> [value]                    | Get or set a dvar value                  | 100  |
-| **rcon**        |             | <command>                         | Execute rcon command                     | 100  |
-| **quit**        |             |                                   | Close the server                         | 100  |
+|:----------------|:------------|:----------------------------------|:-----------------------------------------|--------------------:|
+| **help**        | ? commands  | [page]                            | Display available commands               | 0                   |
+| **info**        | i contact   |                                   | Display server info                      | 0                   |
+| **report**      | r           | <name> [reason]                   | Report a player                          | 0                   |
+| **<a name="items">items</a>**||                                   | Print items for use with other commands  | 10                  |
+| **suicide**     | sc          |                                   | Kill yourself                            | 20                  |
+| **fastrestart** | restart fr  |                                   | Restart the map                          | 40                  |
+| **maprestart**  | mr          |                                   | Reload and restart the map               | 40                  |
+| **map**         |             | <mapname>                         | Change the current map                   | 40                  |
+| **kill**        |             | <name>                            | Kill a specified player                  | 50                  |
+| **give**        |             | [name] <item>                     | Give an item to a player                 | 50                  |
+| **take**        |             | [name] <item>                     | Take an item from a player               | 50                  |
+| **teleport**    | tp          | [name] [name]                     | Teleport to players or a location        | 50                  |
+| **up**          |             | [name]                            | Teleport upwards                         | 50                  |
+| **down**        | dn          | [name]                            | Teleport downwards                       | 50                  |
+| **velocity**    | jump j      | [name] <z \| forwards z \| x y z> | Set a player's velocity                  | 50                  |
+| **freelook**    | fly         | [name]                            | Temporary freelook spectating            | 50                  |
+| **spectate**    | spec spy    | <name>                            | Quietly spectate target                  | 50                  |
+| **esp**         | wallhack wh | [name]                            | Show players through walls               | 50                  |
+| **vision**      | vis         | [visionfile]                      | Set or reset a player's vision           | 50                  |
+| **spawnbot**    | sb          |                                   | Spawn a number of bots                   | 70                  |
+| **kick**        |             | <name> [reason]                   | Kick a client from the server            | 80                  |
+| **ban**         |             | <name> [reason]                   | Permanently ban a client from the server | 90                  |
+| **dvar**        |             | <dvar> [value]                    | Get or set a dvar value                  | 100                 |
+| **rcon**        |             | <command>                         | Execute rcon command                     | 100                 |
+| **quit**        |             |                                   | Close the server                         | 100                 |
 
 ### Related DVars
-| **DVar**                                          | Default Value        | Description                                                                                                            |
-|:--------------------------------------------------|---------------------:|:-----------------------------------------------------------------------------------------------------------------------|
-| **<a name="scr_permissions">scr_permissions</a>** | `""`                 | Space seperated list of GUIDs followed by a permission level.<br>Example: `"a0b1c2d3e4f5g6h7 100 b1c2d3e4f5g6h7i8 50"` |
-| **scr_commands_enable**                           | `0`                  | Enable the chat command system.                                                                  |
-| **scr_commands_set_client_dvars_chat**            | `0`                  | When enabled will set clientside dvars to show chat positioned better and for longer than the default.                 |
-| **scr_commands_prefix**                           | `"!"`                | Prefix used to trigger commands.                                                                                       |
-| **scr_commands_info**                             | `getDvar("sv_motd")` | String to display when the `info` command is used.                                                                     |
-| **scr_commands_report_webhook_url**               | `""`                 | Discord Webhook URL to send reports to.                                                                                |
-| **scr_commands_report_cooldown**                  | `20`                 | Time in seconds that must pass between a player's report attempts.                                                     |
-| **scr_commands_report_chat_log_max_age**          | `300`                | Maximum age of chat messages in seconds that are appended to a report at the time of reporting.                        |
+| **DVar**                                          | Default Value        | Description                                                                                                                      |
+|:--------------------------------------------------|---------------------:|:---------------------------------------------------------------------------------------------------------------------------------|
+| **<a name="scr_permissions">scr_permissions</a>** | `""`                 | Space seperated list of GUIDs followed by a permission level.<br>Example: `"a0b1c2d3e4f5g6h7 100 b1c2d3e4f5g6h7i8 50"`           |
+| **scr_commands_enable**                           | `0`                  | Enable the chat command system.                                                                                                  |
+| **scr_commands_set_client_dvars_chat**            | `0`                  | When enabled will set clientside dvars to show chat positioned better and for longer than the default.                           |
+| **scr_commands_prefix**                           | `"!"`                | Prefix used to trigger commands.                                                                                                 |
+| **scr_commands_info**                             | `getDvar("sv_motd")` | String to display when the `info` command is used.                                                                               |
+| **scr_commands_report_webhook_url**               | `""`                 | Discord Webhook URL to send reports to. <a href="#http-proxy">⚠ Requires a proxy server to send outgoing HTTP POST requests.</a> |
+| **scr_commands_report_cooldown**                  | `20`                 | Time in seconds that must pass between a player's report attempts.                                                               |
+| **scr_commands_report_chat_log_max_age**          | `300`                | Maximum age of chat messages in seconds that are appended to a report at the time of reporting.                                  |
 
 
 ## 🔄 Advanced Map-Rotation
@@ -91,7 +91,7 @@ With the addition of `sv_randomMapRotation` in [IW4X 0.7.0](https://github.com/X
 this can be set to be randomized [(Thanks, @diamante0018!)](https://github.com/XLabsProject/iw4x-client/pull/146).
 However this will shuffle all maps every time they have all been played through, enabling potential duplicate maps at the end of a cycle.
 Also gamemodes can no longer be set per map, as they will be shuffled in-between the maps randomly.
-	
+
 For an overengineered solution to this, as well as the option to only consider maps which fit the amount of connected players,
 this script module can be used. It uses weights for defining the likelihood of a map being picked. A map's weight goes up over time
 and is reset once the map is picked.
@@ -141,36 +141,66 @@ A white-/blacklist system allows precise configuration of the available items.
 <br clear="both">
 
 ### Related DVars
-| **DVar**                                   | Default Value | Description                                                                                                                                                                                                                                                                                       |
-|:-------------------------------------------|--------------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **scr_randomizer_enable**                  | `0`                                                                                        | Enable randomizer mode.                                                                                                                                                                                              |
-| **scr_randomizer_mode**                    | `0`                                                                                        | Mode of loadout synchronization:<br>`0`: Same loadout for everyone.<br>`1`: Same loadout for all players of a team.<br>`2`: Different loadouts for everyone.<br>`3`: Different loadouts for everyone for every life. |
-| **scr_randomizer_interval**                | `0`                                                                                        | Time interval (in seconds) in which loadouts are re-randomized. `0` to disable.                                                                                                                                      |
-| **scr_randomizer_next_preview_time**       | `5.0`                                                                                      | Time to show a preview for the upcoming loadout (see image above). Used in combination with `scr_randomizer_interval`.                                                                                               |
-| **scr_randomizer_weapon_count**            | `1`                                                                                        | Amount of weapons to give per loadout.                                                                                                                                                                               |
-| **scr_randomizer_attachment_count**        | `-1`                                                                                       | Amount of attachments to add to weapons (if applicable). `-1` for a random amount.                                                                                                                                   |
-| **scr_randomizer_perk_ignore_tiers**       | `0`                                                                                        | Ignore perk tiers (red - 1, blue - 2, yellow - 3). Will mix tiers when enabled. Otherwise rolls `scr_randomizer_perk_count` of *each* tier.                                                                          |
-| **scr_randomizer_perk_ignore_hierarchy**   | `0`                                                                                        | Ignore "Pro" and base perk relationships. The upgrade ("Pro" effect) of a perk will be considered a standalone perk, just as the base effect is.                                                                     |
-| **scr_randomizer_perk_count**              | `1`                                                                                        | Amount of perks to give per loadout. If `scr_randomizer_perk_ignore_tiers` is disabled, this is the amount of perks *per tier*, otherwise *in total*.                                                                |
-| **scr_randomizer_perk_upgrade_mode**       | `1`                                                                                        | Mode of giving perk upgrades:<br>`0`: No upgrades.<br>`1`: Always upgrade.<br>`2`: Upgrade if player has the pro variant unlocked.<br>Not applicable when `scr_randomizer_perk_ignore_hierarchy` is enabled.         |
-| **scr_randomizer_deathstreak_death_count** | `-1`                                                                                       | Amount of consecutive deaths required to activate deathstreaks. `-1` for their usual amount.                                                                                                                         |
-| ℹ                                          |                                                                                            | *Use the `items` command for a list of internal item names used by the following settings:*                                                                                                                          |
-| **scr_randomizer_blacklist_weapon**        | `"onemanarmy_mp`<br>`stinger_mp`<br>`deserteaglegold_mp`<br>`ak47classic_mp"`                             | Space-separated list of weapons not allowed.                                                                                                                                                          |
-| **scr_randomizer_blacklist_attachment**    | `""`                                                                                       | Space-separated list of attachments not allowed.                                                                                                                                                                     |
-| **scr_randomizer_blacklist_camo**          | `""`                                                                                       | Space-separated list of camos not allowed.                                                                                                                                                                           |
-| **scr_randomizer_blacklist_equipment**     | `""`                                                                                       | Space-separated list of equipment not allowed.                                                                                                                                                                       |
-| **scr_randomizer_blacklist_offhand**       | `""`                                                                                       | Space-separated list of offhand items not allowed.                                                                                                                                                                   |
-| **scr_randomizer_blacklist_perk**          | `"specialty_bling`<br>`specialty_secondarybling`<br>`specialty_onemanarmy`<br>`specialty_omaquickcharge"` | Space-separated list of perks not allowed.                                                                                                                                                            |
-| **scr_randomizer_blacklist_deathstreak**   | `"specialty_copycat"`                                                                      | Space-separated list of deathstreaks not allowed.                                                                                                                                                                    |
-| **scr_randomizer_whitelist_weapon**        | `""`                                                                                       | Space-separated list of allowed weapons.                                                                                                                                                                             |
-| **scr_randomizer_whitelist_attachment**    | `""`                                                                                       | Space-separated list of allowed attachments.                                                                                                                                                                         |
-| **scr_randomizer_whitelist_camo**          | `""`                                                                                       | Space-separated list of allowed camos.                                                                                                                                                                               |
-| **scr_randomizer_whitelist_equipment**     | `""`                                                                                       | Space-separated list of allowed equipment.                                                                                                                                                                           |
-| **scr_randomizer_whitelist_offhand**       | `""`                                                                                       | Space-separated list of allowed offhand items.                                                                                                                                                                       |
-| **scr_randomizer_whitelist_perk**          | `""`                                                                                       | Space-separated list of allowed perks.                                                                                                                                                                               |
-| **scr_randomizer_whitelist_deathstreak**   | `""`                                                                                       | Space-separated list of allowed deathstreaks.                                                                                                                                                                        |
+| **DVar**                                   | Default Value | Description                                                                                                                                                                                                                                                                                                      |
+|:-------------------------------------------|----------------------------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **scr_randomizer_enable**                  | `0`                                                                                                       | Enable randomizer mode.                                                                                                                                                                                              |
+| **scr_randomizer_mode**                    | `0`                                                                                                       | Mode of loadout synchronization:<br>`0`: Same loadout for everyone.<br>`1`: Same loadout for all players of a team.<br>`2`: Different loadouts for everyone.<br>`3`: Different loadouts for everyone for every life. |
+| **scr_randomizer_interval**                | `0`                                                                                                       | Time interval (in seconds) in which loadouts are re-randomized. `0` to disable.                                                                                                                                      |
+| **scr_randomizer_next_preview_time**       | `5.0`                                                                                                     | Time to show a preview for the upcoming loadout (see image above). Used in combination with `scr_randomizer_interval`.                                                                                               |
+| **scr_randomizer_weapon_count**            | `1`                                                                                                       | Amount of weapons to give per loadout.                                                                                                                                                                               |
+| **scr_randomizer_attachment_count**        | `-1`                                                                                                      | Amount of attachments to add to weapons (if applicable). `-1` for a random amount.                                                                                                                                   |
+| **scr_randomizer_perk_ignore_tiers**       | `0`                                                                                                       | Ignore perk tiers (red - 1, blue - 2, yellow - 3). Will mix tiers when enabled. Otherwise rolls `scr_randomizer_perk_count` of *each* tier.                                                                          |
+| **scr_randomizer_perk_ignore_hierarchy**   | `0`                                                                                                       | Ignore "Pro" and base perk relationships. The upgrade ("Pro" effect) of a perk will be considered a standalone perk, just as the base effect is.                                                                     |
+| **scr_randomizer_perk_count**              | `1`                                                                                                       | Amount of perks to give per loadout. If `scr_randomizer_perk_ignore_tiers` is disabled, this is the amount of perks *per tier*, otherwise *in total*.                                                                |
+| **scr_randomizer_perk_upgrade_mode**       | `1`                                                                                                       | Mode of giving perk upgrades:<br>`0`: No upgrades.<br>`1`: Always upgrade.<br>`2`: Upgrade if player has the pro variant unlocked.<br>Not applicable when `scr_randomizer_perk_ignore_hierarchy` is enabled.         |
+| **scr_randomizer_deathstreak_death_count** | `-1`                                                                                                      | Amount of consecutive deaths required to activate deathstreaks. `-1` for their usual amount.                                                                                                                         |
+| ℹ                                          |                                                                                                           | *Use the <a href="#items">`items`</a> command for a list of internal item names used by the following settings. Use `"none"` as a value for a whitelist to not allow any item of that category.*                     |
+| **scr_randomizer_blacklist_weapon**        | `"onemanarmy_mp`<br>`stinger_mp`<br>`deserteaglegold_mp`<br>`ak47classic_mp"`                             | Space-separated list of weapons not allowed.                                                                                                                                                                         |
+| **scr_randomizer_blacklist_attachment**    | `""`                                                                                                      | Space-separated list of attachments not allowed.                                                                                                                                                                     |
+| **scr_randomizer_blacklist_camo**          | `""`                                                                                                      | Space-separated list of camos not allowed.                                                                                                                                                                           |
+| **scr_randomizer_blacklist_equipment**     | `""`                                                                                                      | Space-separated list of equipment not allowed.                                                                                                                                                                       |
+| **scr_randomizer_blacklist_offhand**       | `""`                                                                                                      | Space-separated list of offhand items not allowed.                                                                                                                                                                   |
+| **scr_randomizer_blacklist_perk**          | `"specialty_bling`<br>`specialty_secondarybling`<br>`specialty_onemanarmy`<br>`specialty_omaquickcharge"` | Space-separated list of perks not allowed.                                                                                                                                                                           |
+| **scr_randomizer_blacklist_deathstreak**   | `"specialty_copycat"`                                                                                     | Space-separated list of deathstreaks not allowed.                                                                                                                                                                    |
+| **scr_randomizer_whitelist_weapon**        | `""`                                                                                                      | Space-separated list of allowed weapons.                                                                                                                                                                             |
+| **scr_randomizer_whitelist_attachment**    | `""`                                                                                                      | Space-separated list of allowed attachments.                                                                                                                                                                         |
+| **scr_randomizer_whitelist_camo**          | `""`                                                                                                      | Space-separated list of allowed camos.                                                                                                                                                                               |
+| **scr_randomizer_whitelist_equipment**     | `""`                                                                                                      | Space-separated list of allowed equipment.                                                                                                                                                                           |
+| **scr_randomizer_whitelist_offhand**       | `""`                                                                                                      | Space-separated list of allowed offhand items.                                                                                                                                                                       |
+| **scr_randomizer_whitelist_perk**          | `""`                                                                                                      | Space-separated list of allowed perks.                                                                                                                                                                               |
+| **scr_randomizer_whitelist_deathstreak**   | `""`                                                                                                      | Space-separated list of allowed deathstreaks.                                                                                                                                                                        |
 
 ## 🟣 Discord Integration
+
+<img align="right" src="https://user-images.githubusercontent.com/21311428/169694154-96812790-a35d-410e-9029-6e37d5189fdc.png" alt="Discord webhook notifications">
+
+> Discord Webhooks for server events.
+
+This script can be used to notify a Discord channel when events happen on a gameserver.
+It uses [Discord Webhooks](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks) to allow automated messages without requiring the use of a Discord bot.
+
+Currently support is limited to the features I personally need: Notifications for a player joining and for when the server gets empty.
+
+<a name="http-proxy"></a>
+
+---
+
+⚠ IW4X currently does not support HTTP POST-type requests.
+These are required to make outgoing HTTP requests for sending webhooks.
+Instead of doing the sensible thing (trying to add POST requests to IW4X)
+these scripts include a proxy server to transform GET requests into POST requests.
+To use any sort of Discord integration, run `/js/http_proxy.js` using [Node.js](https://nodejs.org/) alongside your gameserver.
+
+---
+<br clear="both">
+
+### Related DVars
+| **DVar**                     | Default Value | Description                                             |
+|:-----------------------------|--------------:|:--------------------------------------------------------|
+| **scr_discord_webhook_urls** | `""`          | Space-separated list of Discord Webhook URLs to notify. |
+| **scr_discord_join**         | `0`           | Enable notifications on players joining.                |
+| **scr_discord_empty**        | `0`           | Enable notifications on the server getting empty.       |
+
 ## 🧰 Other Tweaks
 ### Infinite Ammo
 ### Offhand (Grenade) Limits
