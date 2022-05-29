@@ -23,12 +23,13 @@ exist on other clients.
 </p>
 
 ## 📦 Installation
-Drop the mods from the `scripts` folder into `<IW4X>/userraw/scripts`.
+1. `git clone` this repository or [download the source as a .zip file](https://github.com/Muhlex/iw4x-gsc/archive/refs/heads/main.zip)
+and extract it.<br>
+2. Drop the mods from the `scripts` folder into `<IW4X>/userraw/scripts`.
+3. All mods are disabled by default. Refer to their respective documentation to enable them.
 
 It is possible to only include some scripts if you know what you are doing.
 However some scripts may rely on the presence of others (especially `_` prefixed ones) to work correctly.
-
-All mods are disabled by default. Refer to their respective documentation to enable them.
 
 ## 🗯️ Chat Command System
 
@@ -203,8 +204,21 @@ To use any sort of Discord integration, run `/js/http_proxy.js` using [Node.js](
 
 ## 🧰 Other Tweaks
 ### Infinite Ammo
-### Offhand (Grenade) Limits
+| **DVar**              | Default Value | Description                                                                                                                                                                                              |
+|:----------------------|--------------:|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **scr_infinite_ammo** | `0`           | A more flexible version of `player_sustainAmmo`.<br><br>Infinite ammo modes:<br>`0`: Disabled.<br>`1`: Infinite stock & clip ammo, no reloading.<br>`2`: Infinite stock ammo pool. Still need to reload. |
+
+### Offhand Ammo Limit
+| **DVar**                 | Default Value | Description                                                                                                                                     |
+|:-------------------------|--------------:|:------------------------------------------------------------------------------------------------------------------------------------------------|
+| **scr_offhand_max_ammo** | `-1`          | Limit equipment/special grenade ammo. `-1` to disable. Use `0` to ban any equipment/special grenade; `1` to limit special grenades to only one. |
+
 ### Force-set Killstreaks & Perkstreaks
+| **DVar**                   | Default Value | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+|:---------------------------|--------------:|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **scr_forced_killstreaks** | `""`          | Force-set every player's equipped killstreak rewards. Takes a space-separated list of killcounts and the according reward. Example:<br>`"2 predator_missile 4 helicopter 8 ac130 20 nuke"`<br><br>Available killstreak rewards:<br>`uav`<br>`counter_uav`<br>`airdrop`<br>`airdrop_sentry_minigun`<br>`sentry`<br>`predator_missile`<br>`precision_airstrike`<br>`harrier_airstrike`<br>`helicopter`<br>`airdrop_mega`<br>`helicopter_flares`<br>`stealth_airstrike`<br>`helicopter_minigun`<br>`ac130`<br>`emp`<br>`nuke` |
+| **scr_perkstreaks**        | `""`          | Award players with perks for killstreaks. Takes a space-separated list of killcounts and the according reward. Perk upgrades ("Pro"-Perks) must be explicitly listed. Example:<br>`"2 specialty_fastreload 2 specialty_quickdraw 3 specialty_heartbreaker 3 specialty_quieter"`                                                                                                                                                                                                                                            |
+
 ### Status Messages
 ### Perks on Scoreboard
 ### Disable Weapon Drops
