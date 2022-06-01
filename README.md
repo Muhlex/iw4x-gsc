@@ -220,6 +220,40 @@ To use any sort of Discord integration, run `/js/http_proxy.js` using [Node.js](
 | **scr_perkstreaks**        | `""`          | Award players with perks for killstreaks. Takes a space-separated list of killcounts and the according reward. Perk upgrades ("Pro"-Perks) must be explicitly listed. Example:<br>`"2 specialty_fastreload 2 specialty_quickdraw 3 specialty_heartbreaker 3 specialty_quieter"`                                                                                                                                                                                                                                            |
 
 ### Status Messages
-### Perks on Scoreboard
+| **DVar**                | Default Value | Description                                                                           |
+|:------------------------|--------------:|:--------------------------------------------------------------------------------------|
+| **scr_message_welcome** | `""`          | Chat message to print to players after connecting to the server and spawning.         |
+| **scr_message_join**    | `""`          | Chat message to print to all other players when a player connects to the server.      |
+| **scr_message_leave**   | `""`          | Chat message to print to all other players when a player disconnects from the server. |
+
+Use `%` inside of a message to start a new line.
+
+The following strings will be replaced with dynamic values when used inside a message:
+
+| Identifier            | Resulting Value                               |
+|:----------------------|:----------------------------------------------|
+| `{NAME}`              | Name of the player.                           |
+| `{NAME_NOCOLORS}`     | Name of the player without colors.            |
+| `{HOSTNAME}`          | Server name as it appears in the server list. |
+| `{HOSTNAME_NOCOLORS}` | Server name without colors.                   |
+
+### Re-show Perk Display
+| **DVar**                         | Default Value | Description                                                             |
+|:---------------------------------|--------------:|:------------------------------------------------------------------------|
+| **scr_scoreboard_reshows_perks** | `0`           | Re-show the equipped perk display every time the scoreboard was opened. |
+
 ### Disable Weapon Drops
+| **DVar**                  | Default Value | Description                                     |
+|:--------------------------|--------------:|:------------------------------------------------|
+| **scr_death_drop_weapon** | `1`           | Prevents weapon drops on death when set to `0`. |
+
+### Disable changing Classes
+| **DVar**                  | Default Value | Description                                                                                                        |
+|:--------------------------|--------------:|:-------------------------------------------------------------------------------------------------------------------|
+| **scr_allow_classchange** | `1`           | Due to the in-built `ui_allow_classchange` not working, this can be used to prevent players from changing classes. |
+
 ### Eyecandy
+| **DVar**                       | Default Value | Description                                                           |
+|:-------------------------------|--------------:|:----------------------------------------------------------------------|
+| **scr_spawn_open_eyes_effect** | `0`           | Players appear to open their eyes when spawning in.                   |
+| **scr_game_end_slowmo_effect** | `0`           | Adds a match-wide slow motion effect to the action that wins a round. |
