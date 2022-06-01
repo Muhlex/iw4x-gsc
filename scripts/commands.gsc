@@ -21,11 +21,11 @@ init()
 
 	registerCommand("help ? commands", scripts\commands\help::cmd, 0, "Display available commands");
 	if (getDvar("scr_commands_info") != "")
-	registerCommand("info i contact", scripts\commands\info::cmd, 0, "Display server info");
+		registerCommand("info i contact", scripts\commands\info::cmd, 0, "Display server info");
 	if (getDvar("scr_commands_report_webhook_url") != "")
 		registerCommand("report r", scripts\commands\report::cmd, 0, "Report a player");
 	registerCommand("items", scripts\commands\items::cmd, 10, "Print items for use with other commands");
-	registerCommand("suicide sc", scripts\commands\suicide::cmd, 10, "Kill yourself");
+	registerCommand("suicide sc", scripts\commands\suicide::cmd, 20, "Kill yourself");
 	registerCommand("fastrestart restart fr", scripts\commands\fastrestart::cmd, 40, "Restart the map");
 	registerCommand("maprestart mr", scripts\commands\maprestart::cmd, 40, "Reload and restart the map");
 	registerCommand("map", scripts\commands\map::cmd, 40, "Change the current map");

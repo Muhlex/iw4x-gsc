@@ -3,8 +3,18 @@
 init()
 {
 	setDvarIfUninitialized("scr_spawn_open_eyes_effect", false);
+	setDvarIfUninitialized("scr_game_end_slowmo_effect", false);
 
+	level thread OnGameEnded();
 	level thread OnPlayerConnected();
+}
+
+OnGameEnded()
+{
+	level waittill("game_ended", winner);
+
+	if (getDvarInt("scr_game_end_slowmo_effect"))
+		thread playGameEndSlowMotion();
 }
 
 OnPlayerConnected()
@@ -28,6 +38,14 @@ OnPlayerSpawned()
 		if (getDvarInt("scr_spawn_open_eyes_effect"))
 			self thread playOpenEyesEffect();
 	}
+}
+
+playGameEndSlowMotion()
+{
+	setSlowMotion(1.0, 0.1, 0.2);
+	wait 0.2 + 0.3;
+	setSlowMotion(0.1, 1.0, 1.0);
+	wait 1.0;
 }
 
 playOpenEyesEffect()

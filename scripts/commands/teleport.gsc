@@ -32,6 +32,7 @@ playerTeleport(args)
 	}
 
 	player setOrigin(target.origin);
+	player setPlayerAngles(target getPlayerAngles());
 	self respond("^2Teleported ^7" + player.name + " ^2to ^7" + target.name + "^2.");
 }
 

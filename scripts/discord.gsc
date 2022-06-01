@@ -3,6 +3,8 @@
 init()
 {
 	setDvarIfUninitialized("scr_discord_webhook_urls", "");
+	setDvarIfUninitialized("scr_discord_join", false);
+	setDvarIfUninitialized("scr_discord_empty", false);
 
 	level thread OnPlayerJoined();
 	level thread OnServerEmpty();
@@ -16,7 +18,8 @@ OnPlayerJoined()
 
 		if (player isBot()) continue;
 
-		sendWebhookPlayerConnect(player);
+		if (getDvarInt("scr_discord_join"))
+			sendWebhookPlayerConnect(player);
 	}
 }
 
@@ -26,7 +29,8 @@ OnServerEmpty()
 	{
 		level waittill("_lifecycle__empty_ignorebots");
 
-		sendWebhookServerEmpty();
+		if (getDvarInt("scr_discord_empty"))
+			sendWebhookServerEmpty();
 	}
 }
 

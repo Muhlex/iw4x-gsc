@@ -2,6 +2,12 @@
 
 cmd(args, prefix)
 {
+	if (getDvar("scr_commands_report_webhook_url") == "")
+	{
+		self respond("^1Reporting is not available on this server.");
+		return;
+	}
+
 	if (args.size < 2)
 	{
 		self respond("^1Usage: " + prefix + args[0] + " <name> [reason]");

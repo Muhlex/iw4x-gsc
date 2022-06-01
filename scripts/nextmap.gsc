@@ -4,18 +4,19 @@
 
 init()
 {
-	setDvarIfUninitialized("sv_mapRotation_randomize", false);
-	setDvarIfUninitialized("sv_mapRotation_playercounts", "");
-	setDvarIfUninitialized("sv_mapRotation_timeout", 1);
+	setDvarIfUninitialized("scr_nextmap_randomize", false);
+	setDvarIfUninitialized("scr_nextmap_playercounts", "");
+	setDvarIfUninitialized("scr_nextmap_map_timeout", 1);
+	setDvarIfUninitialized("scr_nextmap_empty_switch_delay", 20);
 
 	if (isPartyServer())
 		return;
 
 	res = parseRotationString(getDvar("sv_mapRotation"));
-	res.defs = parseRotationPlayercounts(res.defs, getDvar("sv_mapRotation_playercounts"));
+	res.defs = parseRotationPlayercounts(res.defs, getDvar("scr_nextmap_playercounts"));
 	level.nextmap = res;
-	level.nextmap.randomize = !!getDvarInt("sv_mapRotation_randomize");
-	level.nextmap.afterPickWeight = getDvarInt("sv_mapRotation_timeout") * -1;
+	level.nextmap.randomize = !!getDvarInt("scr_nextmap_randomize");
+	level.nextmap.afterPickWeight = getDvarInt("scr_nextmap_map_timeout") * -1;
 
 	printDefinitions(level.nextmap.defs);
 
@@ -75,7 +76,10 @@ OnPlayerDisconnected()
 	waittillframeend;
 
 	if (level.players.size == 0 && !mapFitsPlayercount(getDvar("mapname")))
+	{
+		wait max(getDvarInt("scr_nextmap_empty_switch_delay"), 1);
 		exitLevel(false);
+	}
 }
 
 OnPlayercountChange()
@@ -315,7 +319,7 @@ parseRotationPlayercounts(defs, str)
 
 		if (configArray.size != 2)
 		{
-			printLnConsole("^3[nextmap]^7 ^1sv_mapRotation_playercounts: Invalid Syntax. Must have 2 arguments per map (<mapname> <min>-<max>).");
+			printLnConsole("^3[nextmap]^7 ^1scr_nextmap_playercounts: Invalid Syntax. Must have 2 arguments per map (<mapname> <min>-<max>).");
 			continue;
 		}
 
@@ -326,7 +330,7 @@ parseRotationPlayercounts(defs, str)
 
 		if (minMaxArray.size != 2)
 		{
-			printLnConsole("^3[nextmap]^7 ^1sv_mapRotation_playercounts: Invalid Syntax. Must have min and max player counts separated by \"-\" (<min>-<max>).");
+			printLnConsole("^3[nextmap]^7 ^1scr_nextmap_playercounts: Invalid Syntax. Must have min and max player counts separated by \"-\" (<min>-<max>).");
 			continue;
 		}
 

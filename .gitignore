@@ -1,11 +1,9 @@
 .vscode
 
-**/*.iwd
-*.cfg
-bots.txt
-missingasset.csv
-bans.json
+/*
+!.gitignore
+!.editorconfig
+!README.md
 
-/**
 !/scripts/
 !/js/

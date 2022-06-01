@@ -4,7 +4,7 @@ cmd(args, prefix)
 {
 	if (args.size < 2)
 	{
-		self respond("^1Usage: " + prefix + args[0] + " [name] <z | forwards z | x y z> ");
+		self respond("^1Usage: " + prefix + args[0] + " [name] <z | forwards z | x y z>");
 		return;
 	}
 
