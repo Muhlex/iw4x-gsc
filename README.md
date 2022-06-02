@@ -192,7 +192,9 @@ Currently support is limited to the features I personally need: Notifications fo
 These are required to make outgoing HTTP requests for sending webhooks.
 Instead of doing the sensible thing (trying to add POST requests to IW4X)
 these scripts include a proxy server to transform GET requests into POST requests.
+
 To use any sort of Discord integration, run `/js/http_proxy.js` using [Node.js](https://nodejs.org/) alongside your gameserver.
+Also remember to start IW4X with the `-scriptablehttp` [launch option](https://github.com/XLabsProject/iw4x-client#command-line-arguments)!
 
 ---
 <br clear="both">
