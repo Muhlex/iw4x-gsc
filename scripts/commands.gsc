@@ -48,7 +48,7 @@ init()
 	registerCommand("quit exit", scripts\commands\quit::cmd, 100, "Close the server");
 
 	level thread OnPlayerConnected();
-	level thread OnPlayerSay();
+	level thread OnPlayerSaid();
 }
 
 OnPlayerConnected()
@@ -70,7 +70,7 @@ OnPlayerConnected()
 	}
 }
 
-OnPlayerSay()
+OnPlayerSaid()
 {
 	for (;;)
 	{

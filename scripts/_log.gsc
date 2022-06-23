@@ -7,7 +7,7 @@ init()
 	if (!storageHas("_log__chat"))
 		storageSet("_log__chat", "");
 
-	level thread OnPlayerSay();
+	level thread OnPlayerSaid();
 }
 
 // ##### PUBLIC START #####
@@ -74,7 +74,7 @@ unserializeChatLog(str)
 	return result;
 }
 
-OnPlayerSay()
+OnPlayerSaid()
 {
 	for (;;)
 	{
