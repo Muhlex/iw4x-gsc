@@ -18,6 +18,7 @@ init()
 	level.commands.permsMap = parsePermissions(getDvar("scr_permissions"));
 	level.commands.commandList = [];
 	level.commands.commandMap = [];
+	level.commands.queue = [];
 
 	registerCommand("help ? commands", scripts\commands\help::cmd, 0, "Display available commands");
 	if (getDvar("scr_commands_info") != "")
@@ -47,8 +48,24 @@ init()
 	registerCommand("rcon", scripts\commands\rcon::cmd, 100, "Execute rcon command");
 	registerCommand("quit exit", scripts\commands\quit::cmd, 100, "Close the server");
 
+	level thread OnCommandQueueThink();
 	level thread OnPlayerConnected();
-	level thread OnPlayerSaid();
+	OnPlayerSay(::OnPlayerSayCallback);
+}
+
+OnCommandQueueThink()
+{
+	for (;;)
+	{
+		foreach (entry in level.commands.queue)
+		{
+			entry.caller thread [[entry.func]](entry.args, entry.prefix);
+		}
+
+		level.commands.queue = [];
+
+		wait 0.05;
+	}
 }
 
 OnPlayerConnected()
@@ -70,36 +87,47 @@ OnPlayerConnected()
 	}
 }
 
-OnPlayerSaid()
+OnPlayerSayCallback(text, mode)
 {
-	for (;;)
+	prefix = getDvar("scr_commands_prefix");
+	if (!stringStartsWith(text, prefix))
+		return true;
+
+	textNoPrefix = getSubStr(text, prefix.size, text.size);
+	args = strTok(textNoPrefix, " ");
+	args[0] = coalesce(args[0], "");
+	args[0] = toLower(args[0]);
+	cmd = level.commands.commandMap[args[0]];
+
+	if (!isDefined(cmd))
 	{
-		level waittill("say", text, player);
-
-		prefix = getDvar("scr_commands_prefix");
-		if (!stringStartsWith(text, prefix))
-			continue;
-
-		textNoPrefix = getSubStr(text, prefix.size, text.size);
-		args = strTok(textNoPrefix, " ");
-		args[0] = coalesce(args[0], "");
-		args[0] = toLower(args[0]);
-		cmd = level.commands.commandMap[args[0]];
-
-		if (!isDefined(cmd))
-		{
-			player respond("^1Unknown command. Use ^7" + prefix + "help ^1for a list of commands.");
-			continue;
-		}
-
-		if (!player hasPermForCmd(cmd))
-		{
-			player respond("^1Insufficient permissions.");
-			continue;
-		}
-
-		player thread [[cmd.func]](args, prefix);
+		self respond("^1Unknown command. Use ^7" + prefix + "help ^1for a list of commands.");
+		return false;
 	}
+
+	if (!self hasPermForCmd(cmd))
+	{
+		self respond("^1Insufficient permissions.");
+		return false;
+	}
+
+	self queueCommand(cmd.func, args, prefix);
+
+	return false;
+}
+
+queueCommand(func, args, prefix)
+{
+	// Chat can be handled in-between times where GSC usually runs. Not calling commands from
+	// the callback prevents unexpected crashes (e. g. suicide, fastrestart (sometimes) commands).
+	// TODO: fastrestart still crashes
+	entry = spawnStruct();
+	entry.caller = self;
+	entry.func = func;
+	entry.args = args;
+	entry.prefix = prefix;
+
+	level.commands.queue[level.commands.queue.size] = entry;
 }
 
 parsePermissions(str)
