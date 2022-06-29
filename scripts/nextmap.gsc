@@ -75,7 +75,7 @@ OnPlayerDisconnected()
 
 	waittillframeend;
 
-	if (level.players.size == 0 && !mapFitsPlayercount(getDvar("mapname")))
+	if (level.nextmap.randomize && level.players.size == 0 && !mapFitsPlayercount(getDvar("mapname")))
 	{
 		wait max(getDvarInt("scr_nextmap_empty_switch_delay"), 1);
 		exitLevel(false);
