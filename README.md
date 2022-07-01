@@ -217,6 +217,12 @@ Also remember to start IW4X with the `-scriptablehttp` [launch option](https://g
 |:-------------------------|--------------:|:------------------------------------------------------------------------------------------------------------------------------------------------|
 | **scr_offhand_max_ammo** | `-1`          | Limit equipment/special grenade ammo. `-1` to disable. Use `0` to ban any equipment/special grenade; `1` to limit special grenades to only one. |
 
+### Force UAV (fixed)
+| **DVar**              | Default Value | Description                                                                                                                                   |
+|:----------------------|--------------:|:----------------------------------------------------------------------------------------------------------------------------------------------|
+| **scr_fix_forceuav**  | `0`           | Enable this fix for the built-in `scr_game_forceuav` which does (almost) nothing by default.                                                  |
+| **scr_game_forceuav** | `0`           | Radar modes:<br>`0`: Disabled.<br>`1`: Sweeping radar (1 UAV killstreak always active).<br>`2`: Constant radar (perfectly accurate red dots). |
+
 ### Force-set Killstreaks & Perkstreaks
 | **DVar**                   | Default Value | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 |:---------------------------|--------------:|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
