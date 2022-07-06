@@ -1,11 +1,10 @@
 #include scripts\_utility;
 
+STORAGE_KEY = "_log__chat";
+
 init()
 {
 	setDvarIfUninitialized("src_log_chat_maxlength", 16);
-
-	if (!storageHas("_log__chat"))
-		storageSet("_log__chat", "");
 
 	level thread OnPlayerSaid();
 }
@@ -32,46 +31,48 @@ logChat(text)
 
 getChatLog()
 {
-	return unserializeChatLog(storageGet("_log__chat"));
+	array = [];
+	i = 0;
+	while (storageHas(STORAGE_KEY + "[" + i + "]"))
+	{
+		raw = strTok(storageGet(STORAGE_KEY + "[" + i + "]"), "%");
+		msg = spawnStruct();
+		msg.guid = raw[0];
+		msg.name = raw[1];
+		msg.time = int(raw[2]);
+		msg.systemTime = int(raw[3]);
+		msg.text = raw[4];
+
+		array[array.size] = msg;
+		i++;
+	}
+	return array;
 }
 
 // ##### PUBLIC END #####
 
 setChatLog(array)
 {
-	storageSet("_log__chat", serializeChatLog(array));
-}
+	clearChatLog();
 
-serializeChatLog(array)
-{
-	str = "";
-
-	foreach (msg in array)
+	foreach (i, msg in array)
 	{
-		// Make empty messages a space to prevent strTok from skipping the entry entirely
-		// thus messing up deserialization.
+		// Make empty messages a space to prevent strTok() from skipping
+		// the entry entirely and messing up deserialization.
 		text = ternary(msg.text == "", " ", msg.text);
-		str += msg.guid + "%" + msg.name + "%" + msg.time + "%" + msg.systemTime + "%" + text + "%";
+		str = msg.guid + "%" + msg.name + "%" + msg.time + "%" + msg.systemTime + "%" + text;
+		storageSet(STORAGE_KEY + "[" + i + "]", str);
 	}
-	str = getSubStr(str, 0, str.size - 1);
-	return str;
 }
 
-unserializeChatLog(str)
+clearChatLog()
 {
-	array = strTok(str, "%");
-	result = [];
-	for (i = 0; i < array.size; i += 5)
+	i = 0;
+	while (storageHas(STORAGE_KEY + "[" + i + "]"))
 	{
-		msg = spawnStruct();
-		msg.guid = array[i];
-		msg.name = array[i + 1];
-		msg.time = int(array[i + 2]);
-		msg.systemTime = int(array[i + 3]);
-		msg.text = array[i + 4];
-		result[result.size] = msg;
+		storageRemove(STORAGE_KEY + "[" + i + "]");
+		i++;
 	}
-	return result;
 }
 
 OnPlayerSaid()
