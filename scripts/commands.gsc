@@ -24,6 +24,7 @@ init()
 		registerCommand("info i contact", scripts\commands\info::cmd, 0, "Display server info");
 	if (getDvar("scr_commands_report_webhook_url") != "")
 		registerCommand("report r", scripts\commands\report::cmd, 0, "Report a player");
+	registerCommand("history chat", scripts\commands\history::cmd, 0, "View chat history");
 	registerCommand("items", scripts\commands\items::cmd, 10, "Print items for use with other commands");
 	registerCommand("suicide sc", scripts\commands\suicide::cmd, 20, "Kill yourself");
 	registerCommand("fastrestart restart fr", scripts\commands\fastrestart::cmd, 40, "Restart the map");

@@ -48,6 +48,7 @@ The permission level is set per-player using the [`scr_permissions`](#scr_permis
 | **help**        | ? commands  | [page]                            | Display available commands               | 0                   |
 | **info**        | i contact   |                                   | Display server info                      | 0                   |
 | **report**      | r           | <name> [reason]                   | Report a player                          | 0                   |
+| **history**     | chat        |                                   | View chat history                        | 0                   |
 | **<a name="items">items</a>**||                                   | Print items for use with other commands  | 10                  |
 | **suicide**     | sc          |                                   | Kill yourself                            | 20                  |
 | **fastrestart** | restart fr  |                                   | Restart the map                          | 40                  |
