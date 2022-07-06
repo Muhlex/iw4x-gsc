@@ -630,8 +630,7 @@ giveWeapons(weaponDefs, isSpawn)
 		if (isSpawn)
 		{
 			self setSpawnWeapon(weaponDefs[0].fullName);
-			self maps\mp\gametypes\_class::_detachAll();
-			self setPlayerModelForWeaponClass(weaponDefs[0].item.class);
+			self setPlayerModel(getPlayerModelForWeaponClass(weaponDefs[0].item.class));
 		}
 		else
 		{
@@ -695,42 +694,35 @@ giveDeathstreak(deathstreak, isSpawn)
 		self thread maps\mp\gametypes\_hud_message::splashNotify(deathstreak.name);
 }
 
-setPlayerModelForWeaponClass(class)
+getPlayerModelForWeaponClass(class)
 {
 	team = self.team;
 
 	switch (class)
 	{
 		case "assault":
-			[[game[team + "_model"]["ASSAULT"]]]();
-			break;
+			return game[team + "_model"]["ASSAULT"];
 
 		case "shotgun":
-			[[game[team + "_model"]["SHOTGUN"]]]();
-			break;
+			return game[team + "_model"]["SHOTGUN"];
 
 		case "smg":
-			[[game[team + "_model"]["SMG"]]]();
-			break;
+			return game[team + "_model"]["SMG"];
 
 		case "sniper":
 			if (level.environment != "" && self isItemUnlocked("ghillie_" + level.environment))
-				[[game[team + "_model"]["GHILLIE"]]]();
+				return game[team + "_model"]["GHILLIE"];
 			else
-				[[game[team + "_model"]["SNIPER"]]]();
-			break;
+				return game[team + "_model"]["SNIPER"];
 
 		case "lmg":
-			[[game[team + "_model"]["LMG"]]]();
-			break;
+			return game[team + "_model"]["LMG"];
 
 		case "riot":
-			[[game[team + "_model"]["RIOT"]]]();
-			break;
+			return game[team + "_model"]["RIOT"];
 
 		default:
-			[[game[team + "_model"]["ASSAULT"]]]();
-			break;
+			return game[team + "_model"]["ASSAULT"];
 	}
 }
 

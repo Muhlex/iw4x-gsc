@@ -42,9 +42,9 @@ OnPlayerSpawned()
 
 playGameEndSlowMotion()
 {
-	setSlowMotion(1.0, 0.1, 0.2);
+	setSlowMotion(1.0, 0.15, 0.2);
 	wait 0.2 + 0.3;
-	setSlowMotion(0.1, 1.0, 1.0);
+	setSlowMotion(0.15, 1.0, 1.0);
 	wait 1.0;
 }
 

@@ -32,10 +32,35 @@ waittillAny(a1, a2, a3, a4, a5, a6, a7, a8)
 	level waittill("eternity");
 }
 
+waittillAnyEntities(e1, a1, e2, a2, e3, a3, e4, a4, e5, a5, e6, a6, e7, a7, e8, a8)
+{
+	if (isDefined(a1)) e1 endon(a1);
+	if (isDefined(a2)) e2 endon(a2);
+	if (isDefined(a3)) e3 endon(a3);
+	if (isDefined(a4)) e4 endon(a4);
+	if (isDefined(a5)) e5 endon(a5);
+	if (isDefined(a6)) e6 endon(a6);
+	if (isDefined(a7)) e7 endon(a7);
+	if (isDefined(a8)) e8 endon(a8);
+	level waittill("eternity");
+}
+
 // Useful for calling a function when not knowing the amount of parameters
 // without raising a script runtime error for passing too many.
-callFunc(func, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)
+callFunc(func, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16)
 {
+	if (isDefined(a16))
+		return self [[func]](a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16);
+	if (isDefined(a15))
+		return self [[func]](a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15);
+	if (isDefined(a14))
+		return self [[func]](a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14);
+	if (isDefined(a13))
+		return self [[func]](a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13);
+	if (isDefined(a12))
+		return self [[func]](a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12);
+	if (isDefined(a11))
+		return self [[func]](a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11);
 	if (isDefined(a10))
 		return self [[func]](a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
 	if (isDefined(a9))
@@ -457,6 +482,16 @@ floatRound(float, digits)
 	return result;
 }
 
+lerp(start, end, frac)
+{
+	return start + (end - start) * frac;
+}
+
+remapRange(value, lowerBound, upperBound, targetLowerBound, targetUpperBound)
+{
+	return targetLowerBound + (targetUpperBound - targetLowerBound) * ((value - lowerBound) / (upperBound - lowerBound));
+}
+
 printLnConsole(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)
 {
 	if (isDefined(a10))
@@ -568,6 +603,37 @@ getPlayerByName(name, exactMatch)
 			return player;
 
 	return undefined;
+}
+
+getPlayersForTeam(team)
+{
+	result = [];
+	foreach (player in level.players)
+	{
+		if (!isDefined(player.team) || player.team != team)
+			continue;
+
+		result[result.size] = player;
+	}
+
+	return result;
+}
+
+// `model` can either be a string or a function:
+setPlayerModel(model)
+{
+	if (isDefined(self.headModel))
+	{
+		self detach(self.headModel, "");
+		self.headModel = undefined;
+	}
+
+	if (isString(model))
+		self setModel(model);
+	else
+		self [[model]]();
+
+	self maps\mp\gametypes\_weapons::stowedWeaponsRefresh();
 }
 
 hudSetPos(selfAlign, parentAlign, x, y)
