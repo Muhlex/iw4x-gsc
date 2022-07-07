@@ -87,6 +87,61 @@ unixToDate(unix)
 	return date;
 }
 
+unixToRelativeTimeString(unix)
+{
+	if (!isDefined(unix)) return undefined;
+
+	diff = (getSystemTime() - int(unix));
+	inFuture = (diff < 0);
+	diff = abs(diff);
+
+	str = "";
+
+	if (diff == 0)
+	{
+		return "just now";
+	}
+	else if (diff < 60)
+	{
+		s = int(diff);
+		str = s + " second" + ternary(s != 1, "s", "");
+	}
+	else if (diff < 3600)
+	{
+		m = int(diff / 60);
+		str = m + " minute" + ternary(m != 1, "s", "");
+	}
+	else if (diff < 86400)
+	{
+		h = int(diff / 3600);
+		str = h + " hour" + ternary(h != 1, "s", "");
+	}
+	else if (diff < 604800)
+	{
+		d = int(diff / 86400);
+		str = d + " day" + ternary(d != 1, "s", "");
+	}
+	else if (diff < 2629743)
+	{
+		w = int(diff / 604800);
+		str = w + " week" + ternary(w != 1, "s", "");
+	}
+	else if (diff < 31556926)
+	{
+		m = int(diff / 2629743);
+		str = m + " month" + ternary(m != 1, "s", "");
+	}
+	else
+	{
+		y = int(diff / 31556926);
+		str = y + " year" + ternary(y != 1, "s", "");
+	}
+
+	str = ternary(inFuture, "in ", "") + str + ternary(!inFuture, " ago", "");
+
+	return str;
+}
+
 dateToISO(date)
 {
 	return ""
