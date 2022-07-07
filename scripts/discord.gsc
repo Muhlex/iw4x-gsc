@@ -59,7 +59,7 @@ sendWebhookPlayerConnect(newPlayer)
 			"\"footer\": {" +
 				"\"text\": \"" + esc(getDvar("sv_hostname")) + "\"" +
 			"}," +
-			"\"timestamp\": \"%ISODATE%\"" +
+			"\"timestamp\": \"" + scripts\_date::getSystemTimeISO() + "\"" +
 		"}" +
 	"]" +
 "}";
@@ -79,7 +79,7 @@ sendWebhookServerEmpty()
 			"\"footer\": {" +
 				"\"text\": \"" + esc(getDvar("sv_hostname")) + "\"" +
 			"}," +
-			"\"timestamp\": \"%ISODATE%\"" +
+			"\"timestamp\": \"" + scripts\_date::getSystemTimeISO() + "\"" +
 		"}" +
 	"]" +
 "}";
@@ -99,7 +99,7 @@ sendWebhookServerEmpty()
 // 			"\"footer\": {" +
 // 				"\"text\": \"" + stringRemoveColors(getDvar("sv_hostname")) + "\"" +
 // 			"}," +
-// 			"\"timestamp\": \"%ISODATE%\"" +
+// 			"\"timestamp\": \"" + scripts\_date::getSystemTimeISO() + "\"" +
 // 		"}" +
 // 	"]" +
 // "}";

@@ -86,7 +86,7 @@ cmd(args, prefix)
 			"\"footer\": {" +
 				"\"text\": \"" + esc(getDvar("sv_hostname")) + "\"" +
 			"}," +
-			"\"timestamp\": \"%ISODATE%\"" +
+			"\"timestamp\": \"" + scripts\_date::getSystemTimeISO() + "\"" +
 		"}" +
 	"]" +
 "}";

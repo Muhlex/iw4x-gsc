@@ -35,8 +35,6 @@ const server = http.createServer(async (request, response) => {
 					.filter(([key]) => key.startsWith('headers[') && key.endsWith(']'))
 					.map(([key, value]) => [key.slice('headers['.length, -']'.length), value])
 			);
-			const body = query.body && query.body
-				.replaceAll('%ISODATE%', new Date().toISOString());
 
 			try {
 				const req = client.request(url, {
@@ -52,7 +50,7 @@ const server = http.createServer(async (request, response) => {
 					response.end('000Target server error:' + error.message);
 				});
 
-				if (body) req.write(body);
+				if (query.body) req.write(query.body);
 				req.end();
 			} catch (error) {
 				response.end('000Malformed request: ' + error.message);

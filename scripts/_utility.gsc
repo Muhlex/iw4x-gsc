@@ -330,6 +330,21 @@ stringEndsWith(str, endstr)
 	return (getSubStr(str, str.size - endstr.size, str.size) == endstr);
 }
 
+stringPadStart(str, targetSize, padstr)
+{
+	str = ternary(isString(str), str, str + "");
+	padstr = coalesce(padstr, " ");
+
+	padSize = (targetSize - str.size);
+	if (padSize < 1) return str;
+
+	padResult = "";
+	for (i = 0; i < padSize; i++)
+		padResult += padstr;
+
+	return (padResult + str);
+}
+
 stringSplit(str, delim)
 {
 	// strTok only works as expected with singular characters
