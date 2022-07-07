@@ -41,7 +41,7 @@ getChatLog()
 		msg.name = raw[1];
 		msg.time = int(raw[2]);
 		msg.systemTime = int(raw[3]);
-		msg.text = raw[4];
+		msg.text = ternary(raw[4] == " ", "", raw[4]);
 
 		array[array.size] = msg;
 		i++;
