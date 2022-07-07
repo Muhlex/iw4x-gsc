@@ -29,7 +29,8 @@ unixToDate(unix)
 	secs = int(unix) - LEAPOCH;
 	days = int(secs / 86400);
 	remsecs = secs % 86400;
-	if (remsecs < 0) {
+	if (remsecs < 0)
+	{
 		remsecs += 86400;
 		days--;
 	}
@@ -39,7 +40,8 @@ unixToDate(unix)
 
 	qc_cycles = int(days / DAYS_PER_400Y);
 	remdays = days % DAYS_PER_400Y;
-	if (remdays < 0) {
+	if (remdays < 0)
+	{
 		remdays += DAYS_PER_400Y;
 		qc_cycles--;
 	}
@@ -69,16 +71,18 @@ unixToDate(unix)
 		months++;
 	}
 
+	if (months >= 10)
+	{
+		months -= 12;
+		years++;
+	}
+
 	date = spawnStruct();
 	date.year = years + 2000;
 	date.month = months + 2 + 1;
-	if (date.month > 12) {
-		date.month -= 12;
-		date.year++;
-	}
 	date.day = remdays + 1;
 	date.weekday = wday;
-	date.yearday = yday;
+	date.yearday = yday + 1;
 
 	date.hour = int(remsecs / 3600);
 	date.minute = int(remsecs / 60) % 60;
