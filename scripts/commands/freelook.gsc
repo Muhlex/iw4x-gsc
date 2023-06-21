@@ -1,6 +1,6 @@
 #include scripts\_utility;
 
-cmd(args, prefix)
+cmd(args, prefix, cmd)
 {
 	if (isDefined(args[1]))
 		target = getPlayerByName(args[1]);

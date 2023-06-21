@@ -320,6 +320,18 @@ arrayToString(array)
 	return str;
 }
 
+arrayToOptions(arr) {
+	opts = "^9<";
+	for (i = 0; i < arr.size; i++)
+	{
+		opts += "^7" + arr[i];
+		if (i < arr.size - 1)
+			opts += "^9/";
+	}
+	opts += "^9>";
+	return opts;
+}
+
 stringStartsWith(str, startstr)
 {
 	return (getSubStr(str, 0, startstr.size) == startstr);
@@ -396,8 +408,7 @@ stringSplit(str, delim)
 	return array;
 }
 
-stringRemoveColors(str)
-{
+stringRemoveColors(str) {
 	parts = strTok(str, "^");
 	foreach (i, part in parts)
 	{
@@ -425,8 +436,7 @@ stringRemoveColors(str)
 	return result;
 }
 
-stringEncodeDiscord(str)
-{
+stringEncodeDiscord(str) {
 	chars = [];
 	chars[0] = "\\"; // Must be first!
 	chars[1] = "_";

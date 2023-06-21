@@ -19,6 +19,13 @@ init()
 	level.nextmap.afterPickWeight = getDvarInt("scr_nextmap_map_timeout") * -1;
 
 	printDefinitions(level.nextmap.defs);
+	if (level.nextmap.randomize) {
+		printLnConsole("^3[nextmap]^7 Randomize: ^2enabled");
+		PrintConsole("^3[nextmap]^7 Randomize: ^2enabled");
+	} else {
+		printLnConsole("^3[nextmap]^7 Randomize: ^1disabled");
+		PrintConsole("^3[nextmap]^7 Randomize: ^1disabled");
+	}
 
 	level OnMapFirstInit();
 	level thread OnPlayerConnected();
@@ -140,7 +147,8 @@ setNextMap(map, gametype)
 	if (isDefined(gametype))
 		gametypeStr = " (" + gametype + ")";
 
-	printLnConsole("^3[nextmap]^7 Next map set to: " + map + gametypeStr);
+	printLnConsole("[iw4x-gsc]^3[nextmap]^7 Next map set to: " + map + gametypeStr);
+	PrintConsole("[iw4x-gsc]^3[nextmap]^7 Next map set to: " + map + gametypeStr);
 
 	if (isDefined(gametype))
 		str = "gametype " + gametype + " map " + map;

@@ -1,6 +1,6 @@
 #include scripts\_utility;
 
-cmd(args, prefix)
+cmd(args, prefix, cmd)
 {
 	target = self;
 	if (isDefined(args[1]))
