@@ -14,7 +14,7 @@ playerTeleportAll(args, prefix, cmd)
 	source = "all";
 	target = self;
 	if (args.size > 2) {
-		target = getPlayerByName(args[2]);
+    	target = getPlayerByName(arrayJoin(arraySlice(args, 1), " "));
 	}
 	if (args.size > 1) {
 		source = args[1];
