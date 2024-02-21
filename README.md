@@ -58,6 +58,7 @@ The permission level is set per-player using the [`scr_permissions`](#scr_permis
 | **give**        |             | [name] <item>                     | Give an item to a player                 | 50                  |
 | **take**        |             | [name] <item>                     | Take an item from a player               | 50                  |
 | **teleport**    | tp          | [name] [name]                     | Teleport to players or a location        | 50                  |
+| **teleportall**  | tpall			| [source=*] [target=name] 					| Teleport all players to a target or yourself | 50 |
 | **up**          |             | [name]                            | Teleport upwards                         | 50                  |
 | **down**        | dn          | [name]                            | Teleport downwards                       | 50                  |
 | **velocity**    | jump j      | [name] <z \| forwards z \| x y z> | Set a player's velocity                  | 50                  |
@@ -71,6 +72,8 @@ The permission level is set per-player using the [`scr_permissions`](#scr_permis
 | **dvar**        |             | <dvar> [value]                    | Get or set a dvar value                  | 100                 |
 | **rcon**        |             | <command>                         | Execute rcon command                     | 100                 |
 | **quit**        |             |                                   | Close the server                         | 100                 |
+
+* source can be any of `all/bots/players/spectators/opfor/axis/marines/allies/team/enemies` (Default is `all`)
 
 ### Related DVars
 | **DVar**                                          | Default Value        | Description                                                                                                                      |
