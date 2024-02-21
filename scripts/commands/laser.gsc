@@ -1,11 +1,23 @@
 #include scripts\_utility;
 
+cmdself(args, prefix, cmd) {
+	cmd(args, prefix, cmd);
+}
+
 cmd(args, prefix, cmd)
 {
-	if (isDefined(args[1]))
-		target = getPlayerByName(args[1]);
-	else
-		target = self;
+	// self _SetActionSlot( 3, "laser" );
+	self SetActionSlot( 3, "laser" );
+	if (args.size < 1)
+	{
+		self respond("^1Usage: " + prefix + args[0] + " <target>");
+		return;
+	}
+
+	target = self;
+	if (args.size > 2) {
+		target = getPlayerByName(arrayJoin(arraySlice(args, 1), " "));
+	}
 
 	if (!isDefined(target))
 	{
@@ -13,32 +25,26 @@ cmd(args, prefix, cmd)
 		return;
 	}
 
-	if (!isDefined(target.commands.laser))
-		target.commands.laser = spawnStruct();
-
-	if (!coalesce(target.commands.laser.active, false))
-	{
-		SetClientDvars(target, 1);
-		target.commands.laser.active = true;
-		self respond("^2Enabled Laser Sight for ^7" + target.name + "^2.");
+	if (!isDefined(target.commands)) {
+		target.commands = spawnstruct();
 	}
-	else
-	{
-		SetClientDvars(target, 0);
-		target.commands.laser.active = false;
-		self respond("^2Disabled Laser Sight for ^7" + target.name + "^2.");
+	if (!isDefined(target.commands.laser)) {
+		target.commands.laser = false;
 	}
-}
 
-SetClientDvars(client, value) {
-    client setClientDvar( "laserLight", value );
-    client setClientDvar( "cg_laserlight", value );
-    client setClientDvar( "laserLightWithoutNightvision", value );
-    client setClientDvar( "laserForceOn", value );
-    if (value == 1) {
-        client iPrintlnBold("Laser Enabled");
-    } else {
-        client iPrintlnBold("Laser Disabled");
-    }
-
+	if (target.commands.laser) {
+		target.commands.laser = false;
+		target setClientDvar("laserForceOn", "0");
+		target setClientDvar("laserLight", "0");
+		target setClientDvar("cg_laserLight", "0");
+		target setClientDvar("laserLightWithoutNightvision", "0");
+		self respond("^2"+target.name+" ^7no longer has laser");
+	} else {
+		target.commands.laser = true;
+		target setClientDvar("laserForceOn", "1");
+		target setClientDvar("laserLight", "1");
+		target setClientDvar("cg_laserLight", "1");
+		target setClientDvar("laserLightWithoutNightvision", "1");
+		self respond("^2"+target.name+" ^7has now laser");
+	}
 }
