@@ -72,6 +72,21 @@ The permission level is set per-player using the [`scr_permissions`](#scr_permis
 | **dvar**        |             | <dvar> [value]                    | Get or set a dvar value                  | 100                 |
 | **rcon**        |             | <command>                         | Execute rcon command                     | 100                 |
 | **quit**        |             |                                   | Close the server                         | 100                 |
+| **alert**        |                                   |                                   | Alerts a player, team or everyone      |  50                  |
+| **nvp**          |                                   | [target player]                   | Toggles nightvision for a player      |  50                  |
+| **laserp**       |                                   | [target player]                   | Toggles laser for a player            |  50                  |
+| **fpsb**         |                                   | [target player]                   | Toggles r_fullbright for a player     |  50                  |
+| **ammo**         |                                   | [weapon] [target player]          | Gives max ammo                         |  50                  |
+| **harrier**      |                                   |                                   | LOL                                    |  100                 |
+| **godmode**      | god                               |                                   | LOL                                    |  100                 |
+| **planecrash**    | crash                             |                                   | Crashes two AC-130s                    |  100                 |
+| **flare**        |                                   |                                   | Gives you a flare                      |  100                 |
+| **op**           |                                   |                                   | Gives you all perks                   |  100                 |
+| **trampoline**   |                                   |                                   | Spawns a trampoline                    |  100                 |
+| **jericho**      |                                   |                                   | jericho                               |  100                 |
+| **airdrop**      | drop                              |                                   | Toggle insane airdrops                 |  100                 |
+| **cvar**         | clientvar seta                    |                                   | Set your own dvar value                |  100                 |
+| **pvar**         | playervar                         |                                   | Set a players dvar value               |  100                 |
 
 * source can be any of `all/bots/players/spectators/opfor/axis/marines/allies/team/enemies` (Default is `all`)
 
