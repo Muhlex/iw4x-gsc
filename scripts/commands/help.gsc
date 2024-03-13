@@ -1,6 +1,6 @@
 #include scripts\_utility;
 
-cmd(args, prefix)
+cmd(args, prefix, cmd)
 {
 	PER_PAGE = 5;
 	pageIndex = int(coalesce(args[1], 1)) - 1;
